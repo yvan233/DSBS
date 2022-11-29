@@ -1,0 +1,65 @@
+[
+    {
+       "ID": "room_1",
+       "Port": [10000, 10001, 10002, 10003, 10004, 10005, 10006], 
+       "nbrID": ["room_2", "room_4"], 
+       "nbrDirection": [1, 2],
+       "datalist": []
+    }, 
+    {
+       "ID": "room_2",
+       "Port": [10007, 10008, 10009, 10010, 10011, 10012, 10013], 
+       "nbrID": ["room_1", "room_3", "room_5"], 
+       "nbrDirection": [1, 2, 3],
+       "datalist": []
+    }, 
+    {
+       "ID": "room_3",
+       "Port": [10014, 10015, 10016, 10017, 10018, 10019, 10020], 
+       "nbrID": ["room_2", "room_6", "pump"], 
+       "nbrDirection": [1, 2, 3],
+       "datalist": []
+    }, 
+    {
+       "ID": "room_4",
+       "Port": [10021, 10022, 10023, 10024, 10025, 10026, 10027], 
+       "nbrID": ["room_1", "room_5"], 
+       "nbrDirection": [1, 2],
+       "datalist": []
+    }, 
+    {
+       "ID": "room_5",
+       "Port": [10028, 10029, 10030, 10031, 10032, 10033, 10034], 
+       "nbrID": ["room_2", "room_4", "room_6"], 
+       "nbrDirection": [1, 2, 3],
+       "datalist": [] 
+    }, 
+    {
+       "ID": "room_6",
+       "Port": [10035, 10036, 10037, 10038, 10039, 10040, 10041], 
+       "nbrID": ["room_3", "room_5", "room_7"], 
+       "nbrDirection": [1, 2, 3],
+       "datalist": []
+    }, 
+    {
+       "ID": "room_7",
+       "Port": [10042, 10043, 10044, 10045, 10046, 10047, 10048], 
+       "nbrID": ["room_6", "pump", "heatpump"],
+       "nbrDirection": [1, 2, 3],
+       "datalist": []
+    }, 
+    {
+       "ID": "pump",
+       "Port": [10049, 10050, 10051, 10052, 10053, 10054, 10055], 
+       "nbrID": ["room_3", "room_7",  "heatpump"], 
+       "nbrDirection": [1, 2, 3],
+       "datalist": []
+    },
+    {
+       "ID": "heatpump",
+       "Port": [10056, 10057, 10058, 10059, 10060, 10061, 10062], 
+       "nbrID": [ "pump", "room_7"], 
+       "nbrDirection": [1, 2],
+       "datalist": []
+    }
+ ]

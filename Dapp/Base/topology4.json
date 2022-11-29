@@ -1,0 +1,33 @@
+[
+   {
+      "ID": "room_1",
+      "Port": [10000, 10001, 10002, 10003, 10004, 10005, 10006], 
+      "nbrID": ["room_2", "room_4"], 
+      "nbrDirection": [5, 6],
+      "datalist": []
+   }, 
+   {
+      "ID": "room_2",
+      "Port": [10007, 10008, 10009, 10010, 10011, 10012, 10013], 
+      "nbrID": ["room_1", "room_3"], 
+      "nbrDirection": [1, 5],
+      "datalist": []
+   }, 
+   {
+      "ID": "room_3",
+      "Port": [10014, 10015, 10016, 10017, 10018, 10019, 10020], 
+      "nbrID": ["room_2","room_4"], 
+      "nbrDirection": [1, 6],
+      "datalist": []
+   }, 
+   {
+      "ID": "room_4",
+      "Port": [10021, 10022, 10023, 10024, 10025, 10026, 10027], 
+      "nbrID": ["room_1","room_3"], 
+      "nbrDirection": [3, 4],
+      "datalist": []
+   }
+]
+
+
+
