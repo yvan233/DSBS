@@ -133,9 +133,9 @@ def W_room(db, room, fcu, list_num, time):
     # sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
     #       (table_name, time, '0x00000241', 'roomRH_setpoint', room.RH_set)
     # cursor.execute(sql)
-    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (table_name, time, '0x0000024A', 'room_Q', room.Q_load)
-    cursor.execute(sql)
+    # sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+    #       (table_name, time, '0x0000024A', 'room_Q', room.Q_load)
+    # cursor.execute(sql)
     sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
           (table_name, time, '0x00000410', 'FCU_onoff_feedback', fcu.onoff)
     cursor.execute(sql)
@@ -408,9 +408,9 @@ def W_room_node(db, room, fcu, time):
     # sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
     #       (table_name, time, '0x00000241', 'roomRH_setpoint', room.RH_set)
     # cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x0000024A', 'room_Q', room.Q_load)
-    cursor.execute(sql)
+    # sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+    #       (time, '0x0000024A', 'room_Q', room.Q_load)
+    # cursor.execute(sql)
     sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
           (time, '0x00000410', 'FCU_onoff_feedback', fcu.onoff)
     cursor.execute(sql)
@@ -485,7 +485,7 @@ def W_heatpump_node(db, heatpump, hour, dry_bulb_t, damp, time):
           (time, '0x35000202', 'heatpump_supplytemp_feedback', heatpump.supplytemp)
     cursor.execute(sql)
     sql = "INSERT INTO heatpump_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x35000204', 'heatpump_workingmode_feedback', heatpump.mode)
+          (time, '0x35000204', 'heatpump_workingmode_feedback', 1)
     cursor.execute(sql)
     sql = "INSERT INTO heatpump_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
           (time, '0x35000900', 'heatpump_flow_alarm', heatpump.flow_alarm)
