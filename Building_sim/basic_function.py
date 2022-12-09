@@ -232,7 +232,7 @@ def W_outdoor(db, hour, dry_bulb_t, damp, time):
 
 def init_control(db):
     cursor = db.cursor()
-    for r in range(1, 9):
+    for r in range(1, 8):
         table = 'room' + str(r) + '_control'
         sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
               (table, 0, '0x00000240', 'roomtemp_setpoint', 24.0)
@@ -254,29 +254,17 @@ def init_control(db):
         cursor.execute(sql)
     #db.commit()
 
-    for p in range(1,3):
-        table = 'pump' + str(p) + '_control'
-        if p == 1:
-            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-                  (table, 0, '0x24000208', 'pump_onoff_setpoint', 1)
-            cursor.execute(sql)
-            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-                  (table, 0, '0x24000216', 'pump_frequency_setpoint', 50)
-            cursor.execute(sql)
-            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-                  (table, 0, '0x24000243', 'pump_valve_setpoint', 1)
-            cursor.execute(sql)
-        else:
-            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-                  (table, 0, '0x24000208', 'pump_onoff_setpoint', 0)
-            cursor.execute(sql)
-            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-                  (table, 0, '0x24000216', 'pump_frequency_setpoint', 0)
-            cursor.execute(sql)
-            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-                  (table, 0, '0x24000243', 'pump_valve_setpoint', 0)
-            cursor.execute(sql)
-    #db.commit()
+    table = 'pump1_control'
+    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+          (table, 0, '0x24000208', 'pump_onoff_setpoint', 1)
+    cursor.execute(sql)
+    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+          (table, 0, '0x24000216', 'pump_frequency_setpoint', 50)
+    cursor.execute(sql)
+    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+          (table, 0, '0x24000243', 'pump_valve_setpoint', 1)
+    cursor.execute(sql)
+
 
     sql = "INSERT INTO heatpump_control(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
               (0, '0x35000201', 'heatpump_onoff_setpoint', 1)
@@ -290,8 +278,8 @@ def init_control(db):
     #db.commit()
 
 def init_control_dis(db, type = "room"):
+    cursor = db.cursor()
     if type == "room":
-        cursor = db.cursor()
         table = 'room_control'
         sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
           (table, 0, '0x00000240', 'roomtemp_setpoint', 24.0)
@@ -323,7 +311,7 @@ def init_control_dis(db, type = "room"):
               (table, 0, '0x24000243', 'pump_valve_setpoint', 1)
         cursor.execute(sql)
 
-    else:
+    elif type == "heatpump":
         sql = "INSERT INTO heatpump_control(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
               (0, '0x35000201', 'heatpump_onoff_setpoint', 1)
         cursor.execute(sql)
@@ -343,17 +331,23 @@ def R_room_control(db, r, fcu):
         sql = "SELECT %s, %s, %s, %s FROM %s order by time DESC limit 4" % ('time', 'id', 'name', 'value', table_name)
         cursor.execute(sql)
         data = cursor.fetchall()
-        if int(data[0][0]) != int(data[3][0]):
-            time.sleep(0.1)
-            continue
+        if data:
+            if int(data[0][0]) != int(data[3][0]):
+                  time.sleep(0.1)
+                  continue
+            else:
+                  # assignment
+                  fcu.valve_set = float(data[0][3])
+                  fcu.mode_set = int(data[1][3])
+                  fcu.fan_set = int(data[2][3])
+                  fcu.onoff_set = int(data[3][3])
+                  break
         else:
-            # assignment
-            fcu.valve_set = float(data[0][3])
-            fcu.mode_set = int(data[1][3])
-            fcu.fan_set = int(data[2][3])
-            fcu.onoff_set = int(data[3][3])
-            break
-
+            fcu.valve_set = 1
+            fcu.mode_set = 1
+            fcu.fan_set = 1
+            fcu.onoff_set = 0
+            break     
 
 def R_pump_control(db, pump):
     # read current data
@@ -363,14 +357,20 @@ def R_pump_control(db, pump):
         sql = "SELECT %s, %s, %s, %s FROM %s order by time DESC limit 3" % ('time', 'id', 'name', 'value', table_name)
         cursor.execute(sql)
         data = cursor.fetchall()
-        if int(data[0][0]) != int(data[2][0]):
-            time.sleep(0.1)
-            continue
+        if data:
+            if int(data[0][0]) != int(data[2][0]):
+                  time.sleep(0.1)
+                  continue
+            else:
+                  # assignment
+                  pump.valve_set = int(data[0][3])
+                  pump.n_set = int(data[1][3])
+                  pump.onoff_set = int(data[2][3])
+                  break
         else:
-            # assignment
-            pump.valve_set = int(data[0][3])
-            pump.n_set = int(data[1][3])
-            pump.onoff_set = int(data[2][3])
+            pump.valve_set = 1
+            pump.n_set = 45
+            pump.onoff_set = 1
             break
 
 
@@ -382,14 +382,20 @@ def R_heatpump_control(db, heatpump):
         sql = "SELECT %s, %s, %s, %s FROM %s order by time DESC limit 3" % ('time', 'id', 'name', 'value', table_name)
         cursor.execute(sql)
         data = cursor.fetchall()
-        if int(data[0][0]) != int(data[2][0]):
-            time.sleep(0.1)
-            continue
+        if data:
+            if int(data[0][0]) != int(data[2][0]):
+                  time.sleep(0.1)
+                  continue
+            else:
+                  # assignment
+                  heatpump.mode = int(data[0][3])
+                  heatpump.supply_tempset = int(data[1][3])
+                  heatpump.onoff = int(data[2][3])
+                  break
         else:
-            # assignment
-            heatpump.mode = int(data[0][3])
-            heatpump.supply_tempset = int(data[1][3])
-            heatpump.onoff = int(data[2][3])
+            heatpump.mode = 1
+            heatpump.supply_tempset = 7
+            heatpump.onoff = 1
             break
 
 
@@ -501,6 +507,7 @@ def W_room_node_noocc(db, room, fcu, time):
 
 
 def W_pump_node(db, pump, time):
+    cursor = db.cursor()
     table_name = 'pump_states'
     sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
           (table_name, time, '0x24000200', 'pump_onoff_feedback', pump.onoff)
@@ -541,13 +548,7 @@ def W_heatpump_node(db, heatpump, hour, dry_bulb_t, damp, time):
           (time, '0x35000204', 'heatpump_workingmode_feedback', 1)
     cursor.execute(sql)
     sql = "INSERT INTO heatpump_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x35000900', 'heatpump_flow_alarm', heatpump.flow_alarm)
-    cursor.execute(sql)
-    sql = "INSERT INTO heatpump_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x35000901', 'heatpump_temp_alarm', heatpump.temp_alarm)
-    cursor.execute(sql)
-    sql = "INSERT INTO heatpump_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x35000902', 'heatpump_pressure_alarm', heatpump.pressure_alarm)
+          (time, '0x35000206', 'heatpump_alarm', heatpump.flow_alarm)
     cursor.execute(sql)
     sql = "INSERT INTO heatpump_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
           (time, '0x32000201', 'outdoor_temp', dry_bulb_t[hour])
@@ -555,7 +556,7 @@ def W_heatpump_node(db, heatpump, hour, dry_bulb_t, damp, time):
     sql = "INSERT INTO heatpump_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
           (time, '0x32000202', 'outdoor_damp', damp[hour])
     cursor.execute(sql)
-
+    db.commit()
 
 def R_room_node_control(db, fcu):
     cursor = db.cursor()

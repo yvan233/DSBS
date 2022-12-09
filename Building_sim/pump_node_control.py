@@ -11,7 +11,7 @@ INTERVAL = 6
 db = pymysql.connect(host=HOST, user=USER, passwd=PASSWORD, db=DB, charset='gbk')
 cursor = db.cursor()
 # set time
-sql = "SELECT %s, %s, %s, %s FROM room_states order by time DESC limit 1" % ('time', 'id', 'name', 'value')
+sql = "SELECT %s, %s, %s, %s FROM pump_states order by time DESC limit 1" % ('time', 'id', 'name', 'value')
 cursor.execute(sql)
 data1 = cursor.fetchall()
 step_min = int(data1[0][0])
@@ -161,13 +161,13 @@ def con_pump(T_s,T_r,speed_k):
 # 写水泵控制表
 def write_controlpump(time, onoff_s, speed_s, valve_s):
     cursor = db.cursor()
-    sql = "INSERT INTO pump_vfd_control_his(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+    sql = "INSERT INTO pump_control(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
           (time, '0x24000208', 'pump_onoff_setpoint', 1)
     cursor.execute(sql)
-    sql = "INSERT INTO pump_vfd_control_his(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+    sql = "INSERT INTO pump_control(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
           (time, '0x24000216', 'pump_frequency_setpoint', speed_s)
     cursor.execute(sql)
-    sql = "INSERT INTO pump_valve_control_his(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+    sql = "INSERT INTO pump_control(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
           (time, '0x24000243', 'pump_valve_setpoint', 1)
     cursor.execute(sql)
     db.commit()
@@ -192,29 +192,19 @@ if __name__=='__main__':
     data = cursor.fetchall()
     step_min = int(data[0][0])
     step_rec = step_min
-    #start_flag = 0
 
     while step_min <= 600:
         start_time = time.time()
         print('pump control time: %d min' % step_min)
-        if start_flag == 0:
+
+        if (step_min - step_rec) % T_inter_con == 0:
+            #G_k, speed_k = read_pump()
             tr, ts, speed = read_pump()
-            #start_flag, onoff_s, speed_s, valve_s = auto_start(db, speed_k)
-        else:
-            # if (step_min - step_rec) % T_inter_Q == 0:
-            #     Qtotal = cal_Q()
-            #     deltaT = cal_deltaT()
-            #     G_s = Qtotal / (4.2 * 1000 * delta_set) * 60 / T_inter_con     # m3/h
-            #     start_time_Q = time.time()
-            #     db.commit()
-            if (step_min - step_rec) % T_inter_con == 0:
-                #G_k, speed_k = read_pump()
-                tr, ts, speed = read_pump()
-                #speed_s, deltaSpeed_last = con_pump(G_s,G_k,speed_k,deltaSpeed_last)
-                speed_s=con_pump(ts, tr, speed)
-                write_controlpump(step_min, onoff_s, speed_s, valve_s)
-                start_time_con = time.time()
-                db.commit()
+            #speed_s, deltaSpeed_last = con_pump(G_s,G_k,speed_k,deltaSpeed_last)
+            speed_s=con_pump(ts, tr, speed)
+            write_controlpump(step_min, 1, speed_s, 1)
+            start_time_con = time.time()
+            db.commit()
         step_min += 1
 
         if T_delta + start_time - time.time() > 0:

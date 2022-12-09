@@ -74,29 +74,6 @@ CREATE TABLE `pump1_control` (
   PRIMARY KEY (`time`,`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
--- ----------------------------
--- Table structure for pump2
--- ----------------------------
-DROP TABLE IF EXISTS `pump2`;
-CREATE TABLE `pump2` (
-  `time` int NOT NULL,
-  `id` varchar(100) CHARACTER SET gbk COLLATE gbk_chinese_ci NOT NULL,
-  `name` varchar(100) CHARACTER SET gbk COLLATE gbk_chinese_ci NOT NULL,
-  `value` float DEFAULT NULL,
-  PRIMARY KEY (`time`,`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- ----------------------------
--- Table structure for pump2_control
--- ----------------------------
-DROP TABLE IF EXISTS `pump2_control`;
-CREATE TABLE `pump2_control` (
-  `time` int NOT NULL,
-  `id` varchar(100) CHARACTER SET gbk COLLATE gbk_chinese_ci NOT NULL,
-  `name` varchar(100) CHARACTER SET gbk COLLATE gbk_chinese_ci NOT NULL,
-  `value` float DEFAULT NULL,
-  PRIMARY KEY (`time`,`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Table structure for room1
@@ -259,30 +236,6 @@ CREATE TABLE `room7` (
 -- ----------------------------
 DROP TABLE IF EXISTS `room7_control`;
 CREATE TABLE `room7_control` (
-  `time` int NOT NULL,
-  `id` varchar(100) CHARACTER SET gbk COLLATE gbk_chinese_ci NOT NULL,
-  `name` varchar(100) CHARACTER SET gbk COLLATE gbk_chinese_ci NOT NULL,
-  `value` float DEFAULT NULL,
-  PRIMARY KEY (`time`,`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- ----------------------------
--- Table structure for room8
--- ----------------------------
-DROP TABLE IF EXISTS `room8`;
-CREATE TABLE `room8` (
-  `time` int NOT NULL,
-  `id` varchar(100) CHARACTER SET gbk COLLATE gbk_chinese_ci NOT NULL,
-  `name` varchar(100) CHARACTER SET gbk COLLATE gbk_chinese_ci NOT NULL,
-  `value` float DEFAULT NULL,
-  PRIMARY KEY (`time`,`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- ----------------------------
--- Table structure for room8_control
--- ----------------------------
-DROP TABLE IF EXISTS `room8_control`;
-CREATE TABLE `room8_control` (
   `time` int NOT NULL,
   `id` varchar(100) CHARACTER SET gbk COLLATE gbk_chinese_ci NOT NULL,
   `name` varchar(100) CHARACTER SET gbk COLLATE gbk_chinese_ci NOT NULL,

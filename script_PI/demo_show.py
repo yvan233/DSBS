@@ -10,3 +10,8 @@ controlMixin = ControlMixin("PI") # 控制函数集合
 DappName = "ALST"
 print("start task: "+DappName)
 controlMixin.startTask(DappName,startNode)
+
+time.sleep(5)
+DappName = "FindTopology"
+print("start task: "+DappName)
+controlMixin.startTask(DappName,startNode)

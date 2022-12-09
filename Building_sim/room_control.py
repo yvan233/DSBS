@@ -86,7 +86,7 @@ def cal_fcu_fan(tem_s, tem_k, position_k, onoff_k, occ_list):
 
 
 # 写控制表
-def write_room_control(db, time, r, onoff, fan_set, mode, valve_set):
+def write_room_control(db, time, r, onoff, fan_set, mode, valve_set, t_set = 24, rh_set = 70):
     cursor = db.cursor()
     table = 'room' + str(r+1) + '_control'
     sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
@@ -101,6 +101,14 @@ def write_room_control(db, time, r, onoff, fan_set, mode, valve_set):
     sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
           (table, time, '0x00000425', 'valve_setpoint', valve_set)
     cursor.execute(sql)
+    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+          (table, time, '0x00000240', 'roomtemp_setpoint', t_set)
+    cursor.execute(sql)
+    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+          (table, time, '0x00000241', 'roomRH_setpoint', rh_set)
+    cursor.execute(sql)
+
+
 
 # 读本地参数
 def R_room_node(db):

@@ -138,28 +138,16 @@ def con_pump(T_s,T_r,speed_k):
 # 写水泵控制表
 def write_controlpump(db, time, speed_s):
     cursor = db.cursor()
-    for p in range(1, 3):
-        table = 'pump' + str(p) + '_control'
-        if p == 1:
-            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-                  (table, time, '0x24000208', 'pump_onoff_setpoint', 1)
-            cursor.execute(sql)
-            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-                  (table, time, '0x24000216', 'pump_frequency_setpoint', speed_s)
-            cursor.execute(sql)
-            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-                  (table, time, '0x24000243', 'pump_valve_setpoint', 1)
-            cursor.execute(sql)
-        else:
-            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-                  (table, time, '0x24000208', 'pump_onoff_setpoint', 0)
-            cursor.execute(sql)
-            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-                  (table, time, '0x24000216', 'pump_frequency_setpoint', 0)
-            cursor.execute(sql)
-            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-                  (table, time, '0x24000243', 'pump_valve_setpoint', 0)
-            cursor.execute(sql)
+    table = 'pump1_control'
+    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+            (table, time, '0x24000208', 'pump_onoff_setpoint', 1)
+    cursor.execute(sql)
+    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+            (table, time, '0x24000216', 'pump_frequency_setpoint', speed_s)
+    cursor.execute(sql)
+    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+            (table, time, '0x24000243', 'pump_valve_setpoint', 1)
+    cursor.execute(sql)
 
 
 if __name__=='__main__':

@@ -10,3 +10,7 @@ controlMixin = ControlMixin("PI") # 控制函数集合
 DappName = "RoomControl"
 print("start task: "+DappName)
 controlMixin.startTask(DappName,startNode)
+
+DappName = "PumpControl"
+print("start task: "+DappName)
+controlMixin.startTask(DappName,"pump")

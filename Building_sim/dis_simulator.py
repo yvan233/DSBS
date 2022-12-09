@@ -11,7 +11,7 @@ DB="mingze_simulator"
 
 HOST_LIST = ["192.168.3.3", "192.168.3.4", "192.168.3.6", "192.168.3.7", "192.168.3.8",
              "192.168.3.9", "192.168.3.10", "192.168.3.11", "192.168.3.26"]
-USER_LIST = ["pi"]
+USER_LIST = ["root"]
 PASSWORD_LIST = ["cfins"]
 DB_LIST = ["room", "pump", "heatpump"]
 
@@ -97,16 +97,20 @@ cursor = db.cursor()
 clear_db(db)
 init_control(db)
 
-db1 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
-db2 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
-db3 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
-db4 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
-db5 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
-db6 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
-db7 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
-db_list = [db1, db2, db3, db4, db5, db6, db7]
+db_list = []
+for i in range(0, 7):
+    db_list.append(pymysql.connect(host=HOST_LIST[i], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8'))
+
+# db1 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
+# db2 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
+# db3 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
+# db4 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
+# db5 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
+# db6 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
+# db7 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
+# db_list = [db1, db2, db3, db4, db5, db6, db7]
 cursor_list = []
-for d in db_list[0:-2]:
+for d in db_list:
     cursor_list.append(d.cursor())
     clear_db(d)
     init_control_dis(d,DB_LIST[0])
@@ -119,6 +123,7 @@ init_control_dis(dbp, type = "pump")
 dbhp = pymysql.connect(host=HOST_LIST[-1], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[2], charset='utf8')
 cursor_pump = dbp.cursor()
 clear_db(dbhp)
+init_control_dis(dbhp, type = "heatpump")
 
 # Initialize database
 G_rec = G_init     #  m3/h
@@ -136,16 +141,16 @@ for n in range(0, nodes):
         P_str += str(round(P[n][0], 1))
 W_pipenet(db, G_str, P_str, 0)
 # room record
-for r in range(0, 8):
+for r in range(0, 7):
     W_room(db, room_list[r], fcu_list[r], r+1, 0)
 # pump record
-for p in range(0, 2):
-    W_pump(db, pump_list[p], p+1, 0)
+W_pump(db, pump_list[0], 1, 0)
 # heatpump record
 W_heatpump(db, heatpump, 0)
 # outdoor record
 W_outdoor(db, step_hour, dry_bulb_his, damp_his, 0)
 db.commit()
+
 
 
 # Run
@@ -168,27 +173,21 @@ for step_min in range(1, 601):      # min
     if step_min == 0:
         init_control(db)
     # Read control signal
-    for r in range(0, 8):
-        if r < 7:
-            R_room_node_control(db_list[r], fcu_list[r])
-        else:
-            R_room_control(db, r, fcu_list[r])
+    for r in range(0, 7):
+        R_room_node_control(db_list[r], fcu_list[r])
         fcu_list[r].fan_position = fcu_list[r].fan_set
         if abs(fcu_list[r].valve_set - fcu_list[r].valve_position) > valve_stepmax:
             fcu_list[r].valve_position += sign(fcu_list[r].valve_set - fcu_list[r].valve_position) * valve_stepmax
         else:
             fcu_list[r].valve_position = fcu_list[r].valve_set
-    for p in range(0, 2):
-        if p == 0:
-            R_pump_node_control(dbp, pump[p])
-        else:
-            R_pump_control(db, pump_list[p])
-        pump_list[p].valve_position = pump_list[p].valve_set
-        pump_list[p].onoff = pump_list[p].onoff_set
-        if abs(pump_list[p].n_set - pump_list[p].n) > pump_stepmax:
-            pump_list[p].n += sign(pump_list[p].n_set - pump_list[p].n) * pump_stepmax
-        else:
-            pump_list[p].n = pump_list[p].n_set
+
+    R_pump_node_control(dbp, pump_list[0])
+    pump_list[0].valve_position = pump_list[0].valve_set
+    pump_list[0].onoff = pump_list[0].onoff_set
+    if abs(pump_list[0].n_set - pump_list[0].n) > pump_stepmax:
+        pump_list[0].n += sign(pump_list[0].n_set - pump_list[0].n) * pump_stepmax
+    else:
+        pump_list[0].n = pump_list[0].n_set
     R_heatpump_control(dbhp, heatpump)
     # Cal resistance
     s_valve = np.zeros((branches, branches))
@@ -237,20 +236,15 @@ for step_min in range(1, 601):      # min
     # Cal room & pump
     G_rec = show_origin(G, new_columes)  # m3/h
     P -= (P[11][0] - 10000) * np.ones((nodes, 1))
-    for r in range(0, 8):
+    for r in range(0, 7):
         rou = cal_density(sup_temp)
         if step_min % 5 == 0:
             if step_min >= 5:
                 # get occ list
                 occ_list = np.zeros(5)
-                if r < 7:
-                    sql = "SELECT %s, %s, %s, %s FROM room_states WHERE name='occupant_num' order by time DESC limit 5" % ('time', 'id', 'name', 'value')
-                    cursor_list[r].execute(sql)
-                    occ_data = cursor_list[r].fetchall()
-                else:
-                    sql = "SELECT %s, %s, %s, %s FROM room"%('time', 'id', 'name', 'value')+str(r+1)+" WHERE name='occupant_num' order by time DESC limit 5"
-                    cursor.execute(sql)
-                    occ_data = cursor.fetchall()
+                sql = "SELECT %s, %s, %s, %s FROM room_states WHERE name='occupant_num' order by time DESC limit 5" % ('time', 'id', 'name', 'value')
+                cursor_list[r].execute(sql)
+                occ_data = cursor_list[r].fetchall()
                 for i in range(0, len(occ_data)):
                     occ_list[len(occ_data) - 1 - i] = float(occ_data[i][3])
             # fan control
@@ -287,7 +281,7 @@ for step_min in range(1, 601):      # min
             P_str += str(round(P[n][0], 1))
     W_pipenet(db, G_str, P_str, step_min)
     # room record
-    for r in range(0, 8):
+    for r in range(0, 7):
         W_room(db, room_list[r], fcu_list[r], r+1, step_min)
         write_room_control(db, step_min, r, fcu_list[r].onoff_set, fcu_list[r].fan_set, fcu_list[r].mode, fcu_list[r].valve_set)
     db.commit()
@@ -309,7 +303,7 @@ for step_min in range(1, 601):      # min
         else:
             W_room_node_noocc(db_list[r], room_list[r], fcu_list[r], step_min)
     W_pump_node(dbp, pump_list[0], step_min)
-    W_heatpump_node(dbhp, heatpump, 5289+step_hour, dry_bulb_his, damp_his, step_min)
+    W_heatpump_node(dbhp, heatpump, step_hour, dry_bulb_his, damp_his, step_min)
 
     if T_delta + start_t - T.time() > 0:
         T.sleep(T_delta + start_t - T.time())

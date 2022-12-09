@@ -155,9 +155,9 @@ def R_occ_his(db, step_min, length=5):      #  read history data
         #       ('time', 'id', 'name', 'value', length)
         # cursor.execute(sql)
         # twr_data = cursor.fetchall()
-
-        for i in range(0, len(occ_data)):
-            occ_list[len(occ_data) - 1 - i] = float(occ_data[i][3])
+        if occ_data:
+            for i in range(0, len(occ_data)):
+                occ_list[len(occ_data) - 1 - i] = float(occ_data[i][3])
             # f_list[length - 1 - i] = float(f_data[i][3])
             # tws_list[length - 1 - i] = float(tws_data[i][3])
             # twr_list[length - 1 - i] = float(twr_data[i][3])

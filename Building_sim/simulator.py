@@ -6,7 +6,7 @@ from pump_control import con_pump, write_controlpump
 
 HOST="localhost"
 USER="root"
-PASSWORD="xt@12345678"
+PASSWORD="cfins"
 DB="mingze_simulator"
 
 # Initialization
@@ -101,11 +101,10 @@ for n in range(0, nodes):
         P_str += str(round(P[n][0], 1))
 W_pipenet(db, G_str, P_str, 0)
 # room record
-for r in range(0, 8):
+for r in range(0, 7):
     W_room(db, room_list[r], fcu_list[r], r+1, 0)
 # pump record
-for p in range(0, 2):
-    W_pump(db, pump_list[p], p+1, 0)
+W_pump(db, pump_list[0], 1, 0)
 # heatpump record
 W_heatpump(db, heatpump, 0)
 # outdoor record
@@ -133,21 +132,20 @@ for step_min in range (1, 601):      # min
     if step_min == 0:
         init_control(db)
     # Read control signal
-    for r in range(0, 8):
+    for r in range(0, 7):
         R_room_control(db, r, fcu_list[r])
         fcu_list[r].fan_position = fcu_list[r].fan_set
         if abs(fcu_list[r].valve_set - fcu_list[r].valve_position) > valve_stepmax:
             fcu_list[r].valve_position += sign(fcu_list[r].valve_set - fcu_list[r].valve_position) * valve_stepmax
         else:
             fcu_list[r].valve_position = fcu_list[r].valve_set
-    for p in range(0, 2):
-        R_pump_control(db, pump_list[p])
-        pump_list[p].valve_position = pump_list[p].valve_set
-        pump_list[p].onoff = pump_list[p].onoff_set
-        if abs(pump_list[p].n_set - pump_list[p].n) > pump_stepmax:
-            pump_list[p].n += sign(pump_list[p].n_set - pump_list[p].n) * pump_stepmax
-        else:
-            pump_list[p].n = pump_list[p].n_set
+    R_pump_control(db, pump_list[0])
+    pump_list[0].valve_position = pump_list[0].valve_set
+    pump_list[0].onoff = pump_list[0].onoff_set
+    if abs(pump_list[0].n_set - pump_list[0].n) > pump_stepmax:
+        pump_list[0].n += sign(pump_list[0].n_set - pump_list[0].n) * pump_stepmax
+    else:
+        pump_list[0].n = pump_list[0].n_set
     R_heatpump_control(db, heatpump)
     # Cal resistance
     s_valve = np.zeros((branches, branches))
@@ -196,7 +194,7 @@ for step_min in range (1, 601):      # min
     # Cal room & pump
     G_rec = show_origin(G, new_columes)  # m3/h
     P -= (P[11][0] - 10000) * np.ones((nodes, 1))
-    for r in range(0, 8):
+    for r in range(0, 7):
         rou = cal_density(sup_temp)
         if step_min % 5 == 0:
             if step_min >= 5:
@@ -239,7 +237,7 @@ for step_min in range (1, 601):      # min
             P_str += str(round(P[n][0], 1))
     W_pipenet(db, G_str, P_str, step_min)
     # room record
-    for r in range(0, 8):
+    for r in range(0, 7):
         W_room(db, room_list[r], fcu_list[r], r+1, step_min)
         write_room_control(db, step_min, r, fcu_list[r].onoff_set, fcu_list[r].fan_set, fcu_list[r].mode, fcu_list[r].valve_set)
     db.commit()
