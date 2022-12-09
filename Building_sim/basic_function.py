@@ -447,6 +447,59 @@ def W_room_node(db, room, fcu, time):
     db.commit()
 
 
+def W_room_node_noocc(db, room, fcu, time):
+    cursor = db.cursor()
+    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+          (time, '0x00000220', 'room_temp', room.temp)
+    cursor.execute(sql)
+    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+          (time, '0x00000221', 'room_RH', room.RH)
+    cursor.execute(sql)
+    # sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+    #       (table_name, time, '0x00000240', 'roomtemp_setpoint', room.temp_set)
+    # cursor.execute(sql)
+    # sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+    #       (table_name, time, '0x00000241', 'roomRH_setpoint', room.RH_set)
+    # cursor.execute(sql)
+    # sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+    #       (time, '0x0000024A', 'room_Q', room.Q_load)
+    # cursor.execute(sql)
+    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+          (time, '0x00000410', 'FCU_onoff_feedback', fcu.onoff)
+    cursor.execute(sql)
+    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+          (time, '0x00000412', 'FCU_fan_feedback', fcu.fan_position)
+    cursor.execute(sql)
+    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+          (time, '0x00000418', 'FCU_workingmode_feedback', fcu.mode)
+    cursor.execute(sql)
+    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+          (time, '0x00000420', 'supply_temp', fcu.tw_supply)
+    cursor.execute(sql)
+    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+          (time, '0x00000421', 'return_temp', fcu.tw_return)
+    cursor.execute(sql)
+    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+          (time, '0x00000422', 'supply_pressure', fcu.tw_supplypressure)
+    cursor.execute(sql)
+    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+          (time, '0x00000423', 'return_pressure', fcu.tw_returnpressure)
+    cursor.execute(sql)
+    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+          (time, '0x00000424', 'waterflow', fcu.waterflow)
+    cursor.execute(sql)
+    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+          (time, '0x00000426', 'valve_feedback', fcu.valve_position)
+    cursor.execute(sql)
+    # sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+    #       (time, '0x00000810', 'occupant_num', room.occupant_num)
+    # cursor.execute(sql)
+    # sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+    #       (time, '0x00000818', 'occupant_transform', room.occupant_trans)
+    # cursor.execute(sql)
+    db.commit()
+
+
 def W_pump_node(db, pump, time):
     table_name = 'pump_states'
     sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \

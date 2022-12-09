@@ -304,7 +304,10 @@ for step_min in range(1, 601):      # min
 
     # send states to nodes
     for r in range(0, 7):
-        W_room_node(db_list[r], room_list[r], fcu_list[r], step_min)
+        if r > 0:
+            W_room_node(db_list[r], room_list[r], fcu_list[r], step_min)
+        else:
+            W_room_node_noocc(db_list[r], room_list[r], fcu_list[r], step_min)
     W_pump_node(dbp, pump_list[0], step_min)
     W_heatpump_node(dbhp, heatpump, 5289+step_hour, dry_bulb_his, damp_his, step_min)
 
