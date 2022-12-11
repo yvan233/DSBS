@@ -185,6 +185,6 @@ if __name__ == "__main__":
                     ssh.sftp_put_dir(local_dir, remote_dir)  
 
                     ssh.close()
-                    print( ele[0] + '成功！')  
+                    print( ele[0] + ' download successfully!')  
                 except Exception as e:
-                    print( ele[0] + '失败！') 
+                    print( ele[0] + ' fails to download!') 

@@ -2,9 +2,6 @@ import pymysql
 import os
 import csv
 class MysqlInit:
-    """
-    Dasp Mysql公共函数
-    """
     def __init__(self, host = "localhost", port = 3306, user = "root", password = "cfins"):
         self.host = host
         self.port = port
@@ -61,8 +58,8 @@ if __name__ == "__main__":
             if ele[1] != "offline":
                 try:
                     db = MysqlInit(host = ele[1])
-                    print( ele[0] + '执行成功！')  
+                    print( ele[0] + ' executes successfully!')  
                 except Exception as e:
-                    print( ele[0] + '执行失败！')  
+                    print( ele[0] + ' fails to execute!')  
 
     
