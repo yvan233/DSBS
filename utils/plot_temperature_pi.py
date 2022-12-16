@@ -32,34 +32,44 @@ class Room:
         self.db = pymysql.connect(host=host, user=user, passwd=passwd, db=db)
         self.cursor = self.db.cursor()
         self.ax = ax
-        self.title = name
+        self.title = name.replace('_', '')
         self.getinitdata()
         self.convdata()
 
     # 获取表内所有数据
     def getinitdata(self):  
         self.room_temp= db_read(self.cursor, 'room_states', 'room_temp', 0)
+        self.FCU_fan= db_read(self.cursor, 'room_states', 'FCU_fan_feedback', 0)
+        self.FCU_onoff= db_read(self.cursor, 'room_states', 'FCU_onoff_feedback', 0)
 
     # 转换数据成可以绘图的
     def convdata(self):
         self.dtime = [int(record[0]) for record in self.room_temp]
+        # 将[1,600]的dtime映射到9点-19点的str字符串
+        self.dtime = [str(9 + i//60) + ":" + str(i%60) for i in self.dtime]
+        self.dtime = [parse(i) for i in self.dtime]
+
         self.temp = [float(record[3]) for record in self.room_temp]
-
-    # 获取新增数据，防止对数据库造成过大的数据压力
-    def updatedata(self):
-        self.room_temp= db_read(self.cursor, self.name, 'room_temp', 0)
-
-    # 清空子图
-    def clear(self):
-        self.ax.clear()
+        self.FCU_fan = [float(record[3]) for record in self.FCU_fan]
+        self.FCU_onoff = [float(record[3]) for record in self.FCU_onoff]
+        self.FCU = [self.FCU_fan[i] * self.FCU_onoff[i] for i in range(len(self.FCU_fan))]
         
     # 绘制子图
     def display(self):
-        self.ax.plot(self.dtime, self.temp, label = 'temp')
-        self.ax.legend(loc='upper left',frameon=True,fontsize = "x-small")
-        # self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%H'))  # x轴只显示小时
+        self.ax.plot(self.dtime, self.temp,'red', label = 'Temperature')
+
+        self.ax2 = self.ax.twinx()
+        self.ax2.plot(self.dtime, self.FCU,'royalblue',label = 'Fanspeed',linewidth = 1.2)
+
+        self.ax.legend(loc='upper left',frameon=True,fontsize = "medium")
+        self.ax2.legend(loc='upper right',frameon=True,fontsize = "medium")
+
+        self.ax2.set_yticks([0,1,2,3])
+        self.ax2.set_yticklabels(['Set_off','Low','Medium','High'])    
+        self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M')) 
         self.ax.set_xlabel("Time")
-        self.ax.set_ylabel("Temp/°C")  #,rotation='horizontal')
+        self.ax.set_ylabel("Temperature/°C")  #,rotation='horizontal')
+        self.ax2.set_ylabel("Fanspeed Level")
         self.ax.set_title(self.title)
 
 if __name__ == "__main__":
@@ -84,4 +94,5 @@ if __name__ == "__main__":
                 roomlist.append(room)
                 i += 1
     plt.tight_layout() 
+    plt.rcParams['savefig.dpi'] = 300
     plt.show()
