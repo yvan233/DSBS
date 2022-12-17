@@ -1,7 +1,6 @@
-import random
+# coding=utf-8
 import time
 import pymysql
-from DASP.module import Task
 
 HOST="localhost"
 USER="root"
@@ -9,6 +8,14 @@ PASSWORD="cfins"
 DB="pump"
 INTERVAL = 6
 
+db = pymysql.connect(host=HOST, user=USER, passwd=PASSWORD, db=DB, charset='gbk')
+cursor = db.cursor()
+# set time
+sql = "SELECT %s, %s, %s, %s FROM pump_states order by time DESC limit 1" % ('time', 'id', 'name', 'value')
+cursor.execute(sql)
+data1 = cursor.fetchall()
+step_min = int(data1[0][0])
+step_rec = step_min
 
 
 def db_insert(cursor, table, time, id ,name, value):
@@ -92,7 +99,7 @@ def auto_stop(db, speed_k, hp_flag):
     return finish_flag, onoff_s, speed_s, valve_s
 
 
-def read_pump(cursor):
+def read_pump():
     sql = "SELECT %s, %s, %s, %s FROM pump_states order by time DESC limit 8" % ('time', 'id', 'name', 'value')
     cursor.execute(sql)
     data1 = cursor.fetchall()
@@ -127,19 +134,19 @@ def con_pump(T_s,T_r,speed_k):
     s1 = 1.0
     s0 = 0.0
     s = 0.0
-    if T_r - T_s >= T_standard+a3:
+    if T_s - T_r >= T_standard+a3:
         s = s3
-    elif T_standard+a2 < T_r - T_s <= T_standard+a3:
+    elif T_standard+a2 < T_s - T_r <= T_standard+a3:
         s = s2
-    elif T_standard+a1 < T_r - T_s <= T_standard+a2:
+    elif T_standard+a1 < T_s - T_r <= T_standard+a2:
         s = s1
-    elif T_standard-a1 < T_r - T_s <= T_standard+a1:
+    elif T_standard-a1 < T_s - T_r <= T_standard+a1:
         s = s0
-    elif T_standard-a2 < T_r - T_s <= T_standard-a1:
+    elif T_standard-a2 < T_s - T_r <= T_standard-a1:
         s = -s1
-    elif T_standard-a3 < T_r - T_s <= T_standard-a2:
+    elif T_standard-a3 < T_s - T_r <= T_standard-a2:
         s = -s2
-    elif T_r - T_s <= T_standard-a3:
+    elif T_s - T_r <= T_standard-a3:
         s = -s3
 
     speed_s = speed_k + s
@@ -152,7 +159,7 @@ def con_pump(T_s,T_r,speed_k):
 
 
 # 写水泵控制表
-def write_controlpump(db, time, onoff_s, speed_s, valve_s):
+def write_controlpump(time, onoff_s, speed_s, valve_s):
     cursor = db.cursor()
     sql = "INSERT INTO pump_control(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
           (time, '0x24000208', 'pump_onoff_setpoint', 1)
@@ -165,16 +172,8 @@ def write_controlpump(db, time, onoff_s, speed_s, valve_s):
     cursor.execute(sql)
     db.commit()
 
-def taskFunction(self:Task, id, nbrDirection, datalist):
-    db = pymysql.connect(host=HOST, user=USER, passwd=PASSWORD, db=DB, charset='gbk')
-    cursor = db.cursor()
-    # set time
-    sql = "SELECT %s, %s, %s, %s FROM pump_states order by time DESC limit 1" % ('time', 'id', 'name', 'value')
-    cursor.execute(sql)
-    data1 = cursor.fetchall()
-    step_min = int(data1[0][0])
-    step_rec = step_min
 
+if __name__=='__main__':
     T_delta = INTERVAL            # waiting time
     T_inter_con = 15
     start_time_con = time.time()
@@ -193,18 +192,17 @@ def taskFunction(self:Task, id, nbrDirection, datalist):
     data = cursor.fetchall()
     step_min = int(data[0][0])
     step_rec = step_min
-    #start_flag = 0
 
     while step_min <= 600:
         start_time = time.time()
-        self.sendDatatoGUI(f'pump control time: {step_min} min')
+        print('pump control time: %d min' % step_min)
 
         if (step_min - step_rec) % T_inter_con == 0:
             #G_k, speed_k = read_pump()
-            tr, ts, speed = read_pump(cursor)
+            tr, ts, speed = read_pump()
             #speed_s, deltaSpeed_last = con_pump(G_s,G_k,speed_k,deltaSpeed_last)
             speed_s=con_pump(ts, tr, speed)
-            write_controlpump(db, step_min, 1, speed_s, 1)
+            write_controlpump(step_min, 1, speed_s, 1)
             start_time_con = time.time()
             db.commit()
         step_min += 1
@@ -213,5 +211,3 @@ def taskFunction(self:Task, id, nbrDirection, datalist):
             time.sleep(T_delta + start_time - time.time())
 
     db.close()
-    return 0
-

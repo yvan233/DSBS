@@ -87,8 +87,8 @@ if __name__ == "__main__":
     i = 0
     for ele in binding[1:]:
         if ele[2] == "pi":
-            if ele[1] != "offline" and i < 6:
-                ax = fig.add_subplot(3, 2, i+1)
+            if ele[1] != "offline" and i < 4:
+                ax = fig.add_subplot(2, 2, i+1)
                 room = Room(name = ele[0],ax = ax, host = ele[1])
                 room.display()
                 roomlist.append(room)

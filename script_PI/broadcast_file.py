@@ -166,7 +166,7 @@ if __name__ == "__main__":
                     user_name = 'pi'
                     password = 'raspberry'
                     port = 22
-                    print( ele[0] + '开始！') 
+                    print( ele[0] + 'start!') 
                     ssh = SSH(ip=host_name, username=user_name, password=password)  # 创建一个ssh类对象
                     ssh.connect()  # 连接远程服务器    
     
