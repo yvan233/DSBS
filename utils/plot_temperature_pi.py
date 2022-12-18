@@ -65,10 +65,12 @@ class Room:
         self.ax2.legend(loc='upper right',frameon=True,fontsize = "medium")
 
         self.ax2.set_yticks([0,1,2,3])
-        self.ax2.set_yticklabels(['Set_off','Low','Medium','High'])    
+        self.ax2.set_yticklabels(['Off','Low','Medium','High'])    
+        for label in self.ax2.get_yticklabels():
+            label.set_rotation(90)
         self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M')) 
         self.ax.set_xlabel("Time")
-        self.ax.set_ylabel("Temperature/°C")  #,rotation='horizontal')
+        self.ax.set_ylabel("Temperature(°C)")  #,rotation='horizontal')
         self.ax2.set_ylabel("Fanspeed Level")
         self.ax.set_title(self.title)
 
@@ -87,8 +89,8 @@ if __name__ == "__main__":
     i = 0
     for ele in binding[1:]:
         if ele[2] == "pi":
-            if ele[1] != "offline" and i < 4:
-                ax = fig.add_subplot(2, 2, i+1)
+            if ele[1] != "offline" and i < 6:
+                ax = fig.add_subplot(3, 2, i+1)
                 room = Room(name = ele[0],ax = ax, host = ele[1])
                 room.display()
                 roomlist.append(room)
