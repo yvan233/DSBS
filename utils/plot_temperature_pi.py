@@ -2,6 +2,7 @@
 import os
 import csv
 import pymysql
+import numpy as np
 from matplotlib import pyplot as plt
 from matplotlib.animation import FuncAnimation
 import matplotlib.animation as animation
@@ -39,20 +40,24 @@ class Room:
     # 获取表内所有数据
     def getinitdata(self):  
         self.room_temp= db_read(self.cursor, 'room_states', 'room_temp', 0)
-        self.FCU_fan= db_read(self.cursor, 'room_states', 'FCU_fan_feedback', 0)
-        self.FCU_onoff= db_read(self.cursor, 'room_states', 'FCU_onoff_feedback', 0)
+        self.FCU_fan_feedback= db_read(self.cursor, 'room_states', 'FCU_fan_feedback', 0)
+        self.FCU_onoff_feedback= db_read(self.cursor, 'room_states', 'FCU_onoff_feedback', 0)
 
     # 转换数据成可以绘图的
     def convdata(self):
-        self.dtime = [int(record[0]) for record in self.room_temp]
-        # 将[1,600]的dtime映射到9点-19点的str字符串
-        self.dtime = [str(9 + i//60) + ":" + str(i%60) for i in self.dtime]
+        self.dtime = [str(9 + i//60) + ":" + str(i%60) for i in range(0,601)]
         self.dtime = [parse(i) for i in self.dtime]
-
-        self.temp = [float(record[3]) for record in self.room_temp]
-        self.FCU_fan = [float(record[3]) for record in self.FCU_fan]
-        self.FCU_onoff = [float(record[3]) for record in self.FCU_onoff]
-        self.FCU = [self.FCU_fan[i] * self.FCU_onoff[i] for i in range(len(self.FCU_fan))]
+    
+        self.temp = np.zeros(601)
+        for rec in self.room_temp:
+            self.temp[rec[0]] = rec[3]
+        self.FCU_fan = np.zeros(601)
+        for rec in self.FCU_fan_feedback:
+            self.FCU_fan[rec[0]] = rec[3]
+        self.FCU_onoff = np.zeros(601)
+        for rec in self.FCU_onoff_feedback:
+            self.FCU_onoff[rec[0]] = rec[3]
+        self.FCU = self.FCU_fan * self.FCU_onoff
         
     # 绘制子图
     def display(self):
@@ -63,7 +68,8 @@ class Room:
 
         self.ax.legend(loc='upper left',frameon=True,fontsize = "medium")
         self.ax2.legend(loc='upper right',frameon=True,fontsize = "medium")
-
+        
+        self.ax.set_ylim(20,30)
         self.ax2.set_yticks([0,1,2,3])
         self.ax2.set_yticklabels(['Off','Low','Medium','High'])    
         for label in self.ax2.get_yticklabels():

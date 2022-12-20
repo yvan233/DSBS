@@ -98,32 +98,31 @@ clear_db(db)
 init_control(db)
 
 db_list = []
-for i in range(0, 7):
-    db_list.append(pymysql.connect(host=HOST_LIST[i], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8'))
-
-# db1 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
-# db2 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
-# db3 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
-# db4 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
-# db5 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
-# db6 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
-# db7 = pymysql.connect(host=HOST_LIST[0], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8')
-# db_list = [db1, db2, db3, db4, db5, db6, db7]
 cursor_list = []
-for d in db_list:
-    cursor_list.append(d.cursor())
-    clear_db(d)
-    init_control_dis(d,DB_LIST[0])
+for i in range(0, 7):
+    try:
+        dbr = pymysql.connect(host=HOST_LIST[i], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8', connect_timeout=1, read_timeout=1, write_timeout=1)
+        db_list.append(dbr)
+        cursor_list.append(dbr.cursor())
+        clear_db(dbr)
+        init_control_dis(dbr,DB_LIST[0])
+    except:
+        db_list.append(None)
+        cursor_list.append(None)
 
-dbp = pymysql.connect(host=HOST_LIST[-2], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[1], charset='utf8')
-cursor_pump = dbp.cursor()
-clear_db(dbp)
-init_control_dis(dbp, type = "pump")
-
-dbhp = pymysql.connect(host=HOST_LIST[-1], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[2], charset='utf8')
-cursor_pump = dbp.cursor()
-clear_db(dbhp)
-init_control_dis(dbhp, type = "heatpump")
+try:
+    dbp = pymysql.connect(host=HOST_LIST[-2], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[1], charset='utf8', connect_timeout=1, read_timeout=1, write_timeout=1)
+    clear_db(dbp)
+    init_control_dis(dbp, type = "pump")
+except:
+    dbp = None
+    
+try:
+    dbhp = pymysql.connect(host=HOST_LIST[-1], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[2], charset='utf8', connect_timeout=1, read_timeout=1, write_timeout=1)
+    clear_db(dbhp)
+    init_control_dis(dbhp, type = "heatpump")
+except:
+    dbhp = None
 
 # Initialize database
 G_rec = G_init     #  m3/h
@@ -153,11 +152,11 @@ db.commit()
 
 for r in range(0, 7):
     if r > 0:
-        W_room_node(db_list[r], room_list[r], fcu_list[r], 0)
+        db_list[r] = W_room_node(db_list[r], room_list[r], fcu_list[r], 0)
     else:
-        W_room_node_noocc(db_list[r], room_list[r], fcu_list[r], 0)
-W_pump_node(dbp, pump_list[0], 0)
-W_heatpump_node(dbhp, heatpump, step_hour, dry_bulb_his, damp_his, 0)
+        db_list[r] = W_room_node_noocc(db_list[r], room_list[r], fcu_list[r], 0)
+dbp = W_pump_node(dbp, pump_list[0], 0)
+dbhp = W_heatpump_node(dbhp, heatpump, step_hour, dry_bulb_his, damp_his, 0)
 print('DB initialization finished')
 
 # Run
@@ -181,21 +180,21 @@ for step_min in range(1, 601):      # min
         init_control(db)
     # Read control signal
     for r in range(0, 7):
-        R_room_node_control(db_list[r], fcu_list[r])
+        db_list[r] = R_room_node_control(db_list[r], fcu_list[r])
         fcu_list[r].fan_position = fcu_list[r].fan_set
         if abs(fcu_list[r].valve_set - fcu_list[r].valve_position) > valve_stepmax:
             fcu_list[r].valve_position += sign(fcu_list[r].valve_set - fcu_list[r].valve_position) * valve_stepmax
         else:
             fcu_list[r].valve_position = fcu_list[r].valve_set
 
-    R_pump_node_control(dbp, pump_list[0])
+    dbp = R_pump_node_control(dbp, pump_list[0])
     pump_list[0].valve_position = pump_list[0].valve_set
     pump_list[0].onoff = pump_list[0].onoff_set
     if abs(pump_list[0].n_set - pump_list[0].n) > pump_stepmax:
         pump_list[0].n += sign(pump_list[0].n_set - pump_list[0].n) * pump_stepmax
     else:
         pump_list[0].n = pump_list[0].n_set
-    R_heatpump_control(dbhp, heatpump)
+    dbhp = R_heatpump_control(dbhp, heatpump)
     # Cal resistance
     s_valve = np.zeros((branches, branches))
     for j in range(0, branches):
@@ -250,8 +249,14 @@ for step_min in range(1, 601):      # min
                 # get occ list
                 occ_list = np.zeros(5)
                 sql = "SELECT %s, %s, %s, %s FROM room_states WHERE name='occupant_num' order by time DESC limit 5" % ('time', 'id', 'name', 'value')
-                cursor_list[r].execute(sql)
-                occ_data = cursor_list[r].fetchall()
+                if cursor_list[r] is not None:
+                    try:
+                        cursor_list[r].execute(sql)
+                        occ_data = cursor_list[r].fetchall()
+                    except:
+                        print(f"Error: unable to connect to room{r+1}")
+                        db_list[r] = None
+                        cursor_list[r] = None
                 for i in range(0, len(occ_data)):
                     occ_list[len(occ_data) - 1 - i] = float(occ_data[i][3])
             # fan control
@@ -306,14 +311,38 @@ for step_min in range(1, 601):      # min
     # send states to nodes
     for r in range(0, 7):
         if r > 0:
-            W_room_node(db_list[r], room_list[r], fcu_list[r], step_min)
+            db_list[r] = W_room_node(db_list[r], room_list[r], fcu_list[r], step_min)
         else:
-            W_room_node_noocc(db_list[r], room_list[r], fcu_list[r], step_min)
-    W_pump_node(dbp, pump_list[0], step_min)
-    W_heatpump_node(dbhp, heatpump, step_hour, dry_bulb_his, damp_his, step_min)
+            db_list[r] = W_room_node_noocc(db_list[r], room_list[r], fcu_list[r], step_min)
+    dbp = W_pump_node(dbp, pump_list[0], step_min)
+    dbhp = W_heatpump_node(dbhp, heatpump, step_hour, dry_bulb_his, damp_his, step_min)
+
+    # try to connect to nodes
+    if step_min % 5 == 0:
+        for r in range(0, 7):
+            if db_list[r] is None:
+                try:
+                    dbr = pymysql.connect(host=HOST_LIST[r], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8', connect_timeout=1, read_timeout=1, write_timeout=1)
+                    db_list[r] = dbr
+                    cursor_list[r] = dbr.cursor()
+                    print(f"room{r+1} reconnected")
+                except:
+                    db_list[r] = None
+                    cursor_list[r] = None
+        if dbp is None:
+            try:
+                dbp = pymysql.connect(host=HOST_LIST[7], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8', connect_timeout=1, read_timeout=1, write_timeout=1)
+                print("pump reconnected")
+            except:
+                dbp = None
+        if dbhp is None:
+            try:
+                dbhp = pymysql.connect(host=HOST_LIST[8], user=USER_LIST[0], passwd=PASSWORD_LIST[0], db=DB_LIST[0], charset='utf8', connect_timeout=1, read_timeout=1, write_timeout=1)
+                print("heatpump reconnected")
+            except:
+                dbhp = None
 
     if T_delta + start_t - T.time() > 0:
         T.sleep(T_delta + start_t - T.time())
-
 # DB close
 db.close()

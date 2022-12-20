@@ -375,245 +375,287 @@ def R_pump_control(db, pump):
 
 
 def R_heatpump_control(db, heatpump):
-    # read current data
-    table_name = heatpump.name + '_control'
-    cursor = db.cursor()
-    while (1):
-        sql = "SELECT %s, %s, %s, %s FROM %s order by time DESC limit 3" % ('time', 'id', 'name', 'value', table_name)
-        cursor.execute(sql)
-        data = cursor.fetchall()
-        if data:
-            if int(data[0][0]) != int(data[2][0]):
-                  time.sleep(0.1)
-                  continue
-            else:
-                  # assignment
-                  heatpump.mode = int(data[0][3])
-                  heatpump.supply_tempset = int(data[1][3])
-                  heatpump.onoff = int(data[2][3])
-                  break
-        else:
-            heatpump.mode = 1
-            heatpump.supply_tempset = 7
-            heatpump.onoff = 1
-            break
+    if db is not None:
+        try:
+            # read current data
+            table_name = heatpump.name + '_control'
+            cursor = db.cursor()
+            while (1):
+                sql = "SELECT %s, %s, %s, %s FROM %s order by time DESC limit 3" % ('time', 'id', 'name', 'value', table_name)
+                cursor.execute(sql)
+                data = cursor.fetchall()
+                if data:
+                    if int(data[0][0]) != int(data[2][0]):
+                        time.sleep(0.1)
+                        continue
+                    else:
+                        # assignment
+                        heatpump.mode = int(data[0][3])
+                        heatpump.supply_tempset = int(data[1][3])
+                        heatpump.onoff = int(data[2][3])
+                        break
+                else:
+                    heatpump.mode = 1
+                    heatpump.supply_tempset = 7
+                    heatpump.onoff = 1
+                    break
+        except:
+            db = None
+            print("Error: unable to connect to heatpump")
+    return db
 
 
 # mz_nodes
 def W_room_node(db, room, fcu, time):
-    cursor = db.cursor()
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000220', 'room_temp', room.temp)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000221', 'room_RH', room.RH)
-    cursor.execute(sql)
-    # sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-    #       (table_name, time, '0x00000240', 'roomtemp_setpoint', room.temp_set)
-    # cursor.execute(sql)
-    # sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-    #       (table_name, time, '0x00000241', 'roomRH_setpoint', room.RH_set)
-    # cursor.execute(sql)
-    # sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-    #       (time, '0x0000024A', 'room_Q', room.Q_load)
-    # cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000410', 'FCU_onoff_feedback', fcu.onoff)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000412', 'FCU_fan_feedback', fcu.fan_position)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000418', 'FCU_workingmode_feedback', fcu.mode)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000420', 'supply_temp', fcu.tw_supply)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000421', 'return_temp', fcu.tw_return)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000422', 'supply_pressure', fcu.tw_supplypressure)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000423', 'return_pressure', fcu.tw_returnpressure)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000424', 'waterflow', fcu.waterflow)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000426', 'valve_feedback', fcu.valve_position)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000810', 'occupant_num', room.occupant_num)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000818', 'occupant_transform', room.occupant_trans)
-    cursor.execute(sql)
-    db.commit()
+    if db is not None:
+        try:
+            cursor = db.cursor()
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000220', 'room_temp', room.temp)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000221', 'room_RH', room.RH)
+            cursor.execute(sql)
+            # sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+            #       (table_name, time, '0x00000240', 'roomtemp_setpoint', room.temp_set)
+            # cursor.execute(sql)
+            # sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+            #       (table_name, time, '0x00000241', 'roomRH_setpoint', room.RH_set)
+            # cursor.execute(sql)
+            # sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+            #       (time, '0x0000024A', 'room_Q', room.Q_load)
+            # cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000410', 'FCU_onoff_feedback', fcu.onoff)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000412', 'FCU_fan_feedback', fcu.fan_position)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000418', 'FCU_workingmode_feedback', fcu.mode)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000420', 'supply_temp', fcu.tw_supply)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000421', 'return_temp', fcu.tw_return)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000422', 'supply_pressure', fcu.tw_supplypressure)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000423', 'return_pressure', fcu.tw_returnpressure)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000424', 'waterflow', fcu.waterflow)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000426', 'valve_feedback', fcu.valve_position)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000810', 'occupant_num', room.occupant_num)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000818', 'occupant_transform', room.occupant_trans)
+            cursor.execute(sql)
+            db.commit()
+        except:
+            db = None
+            print(f"Error: unable to connect to {room.name}")
+    return db
 
 
 def W_room_node_noocc(db, room, fcu, time):
-    cursor = db.cursor()
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000220', 'room_temp', room.temp)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000221', 'room_RH', room.RH)
-    cursor.execute(sql)
-    # sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-    #       (table_name, time, '0x00000240', 'roomtemp_setpoint', room.temp_set)
-    # cursor.execute(sql)
-    # sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-    #       (table_name, time, '0x00000241', 'roomRH_setpoint', room.RH_set)
-    # cursor.execute(sql)
-    # sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-    #       (time, '0x0000024A', 'room_Q', room.Q_load)
-    # cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000410', 'FCU_onoff_feedback', fcu.onoff)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000412', 'FCU_fan_feedback', fcu.fan_position)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000418', 'FCU_workingmode_feedback', fcu.mode)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000420', 'supply_temp', fcu.tw_supply)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000421', 'return_temp', fcu.tw_return)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000422', 'supply_pressure', fcu.tw_supplypressure)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000423', 'return_pressure', fcu.tw_returnpressure)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000424', 'waterflow', fcu.waterflow)
-    cursor.execute(sql)
-    sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x00000426', 'valve_feedback', fcu.valve_position)
-    cursor.execute(sql)
-    # sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-    #       (time, '0x00000810', 'occupant_num', room.occupant_num)
-    # cursor.execute(sql)
-    # sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-    #       (time, '0x00000818', 'occupant_transform', room.occupant_trans)
-    # cursor.execute(sql)
-    db.commit()
+    if db is not None:
+        try:
+            cursor = db.cursor()
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000220', 'room_temp', room.temp)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000221', 'room_RH', room.RH)
+            cursor.execute(sql)
+            # sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+            #       (table_name, time, '0x00000240', 'roomtemp_setpoint', room.temp_set)
+            # cursor.execute(sql)
+            # sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+            #       (table_name, time, '0x00000241', 'roomRH_setpoint', room.RH_set)
+            # cursor.execute(sql)
+            # sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+            #       (time, '0x0000024A', 'room_Q', room.Q_load)
+            # cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000410', 'FCU_onoff_feedback', fcu.onoff)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000412', 'FCU_fan_feedback', fcu.fan_position)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000418', 'FCU_workingmode_feedback', fcu.mode)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000420', 'supply_temp', fcu.tw_supply)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000421', 'return_temp', fcu.tw_return)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000422', 'supply_pressure', fcu.tw_supplypressure)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000423', 'return_pressure', fcu.tw_returnpressure)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000424', 'waterflow', fcu.waterflow)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x00000426', 'valve_feedback', fcu.valve_position)
+            cursor.execute(sql)
+            # sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+            #       (time, '0x00000810', 'occupant_num', room.occupant_num)
+            # cursor.execute(sql)
+            # sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+            #       (time, '0x00000818', 'occupant_transform', room.occupant_trans)
+            # cursor.execute(sql)
+            db.commit()
+        except:
+            db = None
+            print(f"Error: unable to connect to {room.name}")
+    return db
+
 
 
 def W_pump_node(db, pump, time):
-    cursor = db.cursor()
-    table_name = 'pump_states'
-    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (table_name, time, '0x24000200', 'pump_onoff_feedback', pump.onoff)
-    cursor.execute(sql)
-    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (table_name, time, '0x24000210', 'pump_supplypressure', pump.p_supply)
-    cursor.execute(sql)
-    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (table_name, time, '0x24000211', 'pump_returnpressure', pump.p_return)
-    cursor.execute(sql)
-    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (table_name, time, '0x24000214', 'pump_flow', pump.G)
-    cursor.execute(sql)
-    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (table_name, time, '0x24000215', 'pump_frequency_feedback', pump.n)
-    cursor.execute(sql)
-    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (table_name, time, '0x24000240', 'pump_supplytemp', pump.supply_temp)
-    cursor.execute(sql)
-    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (table_name, time, '0x24000241', 'pump_returntemp', pump.return_temp)
-    cursor.execute(sql)
-    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (table_name, time, '0x24000242', 'pump_valve_feedback', pump.valve_position)
-    cursor.execute(sql)
-    db.commit()
-
+    if db is not None:
+        try:
+            cursor = db.cursor()
+            table_name = 'pump_states'
+            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (table_name, time, '0x24000200', 'pump_onoff_feedback', pump.onoff)
+            cursor.execute(sql)
+            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (table_name, time, '0x24000210', 'pump_supplypressure', pump.p_supply)
+            cursor.execute(sql)
+            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (table_name, time, '0x24000211', 'pump_returnpressure', pump.p_return)
+            cursor.execute(sql)
+            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (table_name, time, '0x24000214', 'pump_flow', pump.G)
+            cursor.execute(sql)
+            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (table_name, time, '0x24000215', 'pump_frequency_feedback', pump.n)
+            cursor.execute(sql)
+            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (table_name, time, '0x24000240', 'pump_supplytemp', pump.supply_temp)
+            cursor.execute(sql)
+            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (table_name, time, '0x24000241', 'pump_returntemp', pump.return_temp)
+            cursor.execute(sql)
+            sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (table_name, time, '0x24000242', 'pump_valve_feedback', pump.valve_position)
+            cursor.execute(sql)
+            db.commit()
+        except:
+            db = None
+            print(f"Error: unable to connect to {pump.name}")
+    return db
 
 def W_heatpump_node(db, heatpump, hour, dry_bulb_t, damp, time):
-    cursor = db.cursor()
-    sql = "INSERT INTO heatpump_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x35000200', 'heatpump_onoff_feedback', heatpump.onoff)
-    cursor.execute(sql)
-    sql = "INSERT INTO heatpump_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x35000202', 'heatpump_supplytemp_feedback', heatpump.supplytemp)
-    cursor.execute(sql)
-    sql = "INSERT INTO heatpump_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x35000204', 'heatpump_workingmode_feedback', 1)
-    cursor.execute(sql)
-    sql = "INSERT INTO heatpump_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x35000206', 'heatpump_alarm', heatpump.flow_alarm)
-    cursor.execute(sql)
-    sql = "INSERT INTO heatpump_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x32000201', 'outdoor_temp', dry_bulb_t[hour])
-    cursor.execute(sql)
-    sql = "INSERT INTO heatpump_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-          (time, '0x32000202', 'outdoor_damp', damp[hour])
-    cursor.execute(sql)
-    db.commit()
+    if db is not None:
+        try:
+            cursor = db.cursor()
+            sql = "INSERT INTO heatpump_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x35000200', 'heatpump_onoff_feedback', heatpump.onoff)
+            cursor.execute(sql)
+            sql = "INSERT INTO heatpump_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x35000202', 'heatpump_supplytemp_feedback', heatpump.supplytemp)
+            cursor.execute(sql)
+            sql = "INSERT INTO heatpump_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x35000204', 'heatpump_workingmode_feedback', 1)
+            cursor.execute(sql)
+            sql = "INSERT INTO heatpump_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x35000206', 'heatpump_alarm', heatpump.flow_alarm)
+            cursor.execute(sql)
+            sql = "INSERT INTO heatpump_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x32000201', 'outdoor_temp', dry_bulb_t[hour])
+            cursor.execute(sql)
+            sql = "INSERT INTO heatpump_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                (time, '0x32000202', 'outdoor_damp', damp[hour])
+            cursor.execute(sql)
+            db.commit()
+        except:
+            db = None
+            print(f"Error: unable to connect to {heatpump.name}")
+    return db
 
 def R_room_node_control(db, fcu):
-    cursor = db.cursor()
-    for t in range(0, 80):
-        sql = "SELECT %s, %s, %s, %s FROM room_control order by time DESC limit 6" % ('time', 'id', 'name', 'value')
-        cursor.execute(sql)
-        data1 = cursor.fetchall()
-        if data1:
-            if int(data1[0][0]) != int(data1[2][0]):
-                time.sleep(0.1)
-            else:
-                for i in range (0, 3):
-                    # assignment
-                    if data1[i][2] == 'FCU_onoff_setpoint':
-                        fcu.onoff_set = int(data1[i][3])
-                    if data1[i][2] == 'FCU_fan_setpoint':
-                        fcu.fan_set = int(data1[i][3])
-                    if data1[i][2] == 'FCU_workingmode_setpoint':
-                        fcu.mode_set = int(data1[i][3])
-                    if data1[i][2] == 'valve_setpoint':
-                        fcu.valve_set = float(data1[0][3])
-                # fcu.onoff_set = int(data1[0][3])
-                # fcu.fan_set = int(data1[1][3])
-                # fcu.mode_set = int(data1[2][3])
-                break
-        else:
-            fcu.mode_set = 1
-            fcu.onoff_set = 1
-            fcu.fan_set = 1
-            fcu.valve_set = 100.0
-            break
+    if db is not None:
+        try:
+            cursor = db.cursor()
+            for t in range(0, 80):
+                sql = "SELECT %s, %s, %s, %s FROM room_control order by time DESC limit 6" % ('time', 'id', 'name', 'value')
+                cursor.execute(sql)
+                data1 = cursor.fetchall()
+                if data1:
+                    if int(data1[0][0]) != int(data1[2][0]):
+                        time.sleep(0.1)
+                    else:
+                        for i in range (0, 3):
+                            # assignment
+                            if data1[i][2] == 'FCU_onoff_setpoint':
+                                fcu.onoff_set = int(data1[i][3])
+                            if data1[i][2] == 'FCU_fan_setpoint':
+                                fcu.fan_set = int(data1[i][3])
+                            if data1[i][2] == 'FCU_workingmode_setpoint':
+                                fcu.mode_set = int(data1[i][3])
+                            if data1[i][2] == 'valve_setpoint':
+                                fcu.valve_set = float(data1[0][3])
+                        # fcu.onoff_set = int(data1[0][3])
+                        # fcu.fan_set = int(data1[1][3])
+                        # fcu.mode_set = int(data1[2][3])
+                        break
+                else:
+                    fcu.mode_set = 1
+                    fcu.onoff_set = 1
+                    fcu.fan_set = 1
+                    fcu.valve_set = 100.0
+                    break
+        except:
+            db = None
+            print(f"Error: unable to connect to {fcu.FCU_name}")
+    return db
 
 
 def R_pump_node_control(db, pump):
-    cursor = db.cursor()
-    for t in range(0, 80):
-        sql = "SELECT %s, %s, %s, %s FROM pump_control order by time DESC limit 3" % ('time', 'id', 'name', 'value')
-        cursor.execute(sql)
-        data1 = cursor.fetchall()
-        if data1:
-            if int(data1[0][0]) != int(data1[1][0]):
-                time.sleep(0.1)
-            else:
-                # assignment
-                for i in range(0, 2):
-                    if data1[i][2] == 'pump_onoff_setpoint':
-                        pump.onoff_set = int(data1[i][3])
-                    if data1[i][2] == 'pump_frequency_setpoint':
-                        pump.n_set = int(data1[i][3])
-                    if data1[i][2] == 'pump_valve_setpoint':
-                        pump.valve_set = int(data1[i][3])
-                break
-        else:
-            pump.n_set = 30
-            pump.onoff_set = 1
-            pump.pump.valve_set = 1
-            break
+    if db is not None:
+        try:
+            cursor = db.cursor()
+            for t in range(0, 80):
+                sql = "SELECT %s, %s, %s, %s FROM pump_control order by time DESC limit 3" % ('time', 'id', 'name', 'value')
+                cursor.execute(sql)
+                data1 = cursor.fetchall()
+                if data1:
+                    if int(data1[0][0]) != int(data1[1][0]):
+                        time.sleep(0.1)
+                    else:
+                        # assignment
+                        for i in range(0, 2):
+                            if data1[i][2] == 'pump_onoff_setpoint':
+                                pump.onoff_set = int(data1[i][3])
+                            if data1[i][2] == 'pump_frequency_setpoint':
+                                pump.n_set = int(data1[i][3])
+                            if data1[i][2] == 'pump_valve_setpoint':
+                                pump.valve_set = int(data1[i][3])
+                        break
+                else:
+                    pump.n_set = 30
+                    pump.onoff_set = 1
+                    pump.pump.valve_set = 1
+                    break
+        except:
+            db = None
+            print(f"Error: unable to connect to pump")
+    return db
 
 
 def R_heatpump_node_control(db, heatpump):
