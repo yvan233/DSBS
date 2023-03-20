@@ -1,6 +1,6 @@
 <!-- ABOUT DSBS -->
 
-## About distributed smart building simulation (DSBS)
+## About distributed smart building simulator (DSBS)
 
 **DSBS** use semi-physical simulation to construct a Honeycomb prototype that has been deployed in a multi-zone office. It helps to closely approximate real building scenarios and facilitates the rapid deployment of Honeycomb in actual buildings.
 
