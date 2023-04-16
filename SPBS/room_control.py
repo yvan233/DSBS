@@ -23,7 +23,7 @@ import numpy as np
 # 读取温度设定值和测量值
 def read_room(num):
     while(1):
-        sql = "SELECT %s, %s, %s, %s FROM %s order by time DESC limit 14" % ('time', 'id', 'name', 'value', 'room'+str(num+1))
+        sql = "SELECT %s, %s, %s, %s FROM %s order by time DESC limit 17" % ('time', 'id', 'name', 'value', 'room'+str(num+1))
         cursor.execute(sql)
         data = cursor.fetchall()
         if int(data[0][0]) != int(data[15][0]):
@@ -42,12 +42,13 @@ def cal_fcu_fan(tem_s, tem_k, position_k, onoff_k, occ_list):
     M = 2
     L = 1
     Off = 0
+    On = 1
     a1 = 0.5
     a2 = 1
     a3 = 1.5
     a4 = 2
-    position_s = 0
-    onoff_s = 1
+    position_s = L
+    onoff_s = On
 
     occ_sum = np.sum(occ_list)
     if occ_sum == 0:
@@ -56,28 +57,44 @@ def cal_fcu_fan(tem_s, tem_k, position_k, onoff_k, occ_list):
         if tem_k - tem_s > a4:
             position_s = H
         elif a3 <= tem_k - tem_s < a4 and (position_k == M):
-            position_s = M
+            position_s = H
         elif a3 < tem_k - tem_s <= a4 and (position_k == H):
             position_s = H
         elif a3 < tem_k - tem_s <= a4 and (position_k == L):
             position_s = M
-        elif a2 < tem_k - tem_s <= a3:
+        elif a3 < tem_k - tem_s <= a4 and (onoff_k == Off):
             position_s = M
-        elif a1 <= tem_k - tem_s < a2 and (position_k == L):
+        elif a2 < tem_k - tem_s <= a3 and (onoff_k == Off):
             position_s = L
+        elif a2 < tem_k - tem_s <= a3 and (position_k == L):
+            position_s = M
+        elif a2 < tem_k - tem_s <= a3 and (position_k == M):
+            position_s = H
+        elif a2 < tem_k - tem_s <= a3 and (position_k == H):
+            position_s = H
+        elif a1 <= tem_k - tem_s < a2 and (onoff_k == Off):
+            position_s = L
+        elif a1 <= tem_k - tem_s < a2 and (position_k == L):
+            position_s = M
         elif a1 < tem_k - tem_s <= a2 and (position_k == M):
             position_s = M
         elif a1 < tem_k - tem_s <= a2 and (position_k == H):
+            position_s = H
+        elif -a1 <= tem_k - tem_s < a1 and (onoff_k == Off):
+            position_s = L
+        elif -a1 <= tem_k - tem_s < a1 and (position_k == L):
+            position_s = L
+        elif -a1 < tem_k - tem_s <= a1 and (position_k == M):
             position_s = M
-        elif -a2 < tem_k - tem_s <= a1:
+        elif -a1 < tem_k - tem_s <= a1 and (position_k == H):
+            position_s = M
+        elif -a2 < tem_k - tem_s <= -a1 and (position_k == H or position_k == M or position_k == L):
             position_s = L
-        # elif -a4 <tem_s - tem_k <= -a2 and (position_k == L):
-        #     position_s = L
-        elif -a3 < tem_k - tem_s <= -a2 and (position_k == L or position_k == M or position_k == H):
-            position_s = L
-        elif -a4 < tem_k - tem_s <= -a3 and (position_k == L):
+        elif -a2 < tem_k - tem_s <= -a1 and ( onoff_k == Off):
             onoff_s = Off
-        elif -a4 < tem_k - tem_s <= -a2 and (onoff_k == Off):
+        elif -a4 < tem_k - tem_s <= -a2 and (position_k == H):
+            position_s = L
+        elif -a4 < tem_k - tem_s <= -a2:
             onoff_s = Off
         elif tem_k - tem_s <= -a4:
             onoff_s = Off

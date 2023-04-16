@@ -1,20 +1,14 @@
 # 读取数据库并绘制温度曲线
-import os
-import csv
 import pymysql
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.animation import FuncAnimation
-import matplotlib.animation as animation
 import matplotlib.dates as mdates
 from dateutil.parser import parse
 
 HOST="localhost"
 USER="root"
 PASSWORD="cfins"
-DB="room"
-
-
+DB="mingze_simulator_noocc"
 
 def db_read(cursor, table, name, num): 
     if num == 0:
@@ -33,22 +27,25 @@ class Room:
         self.db = pymysql.connect(host=host, user=user, passwd=passwd, db=db)
         self.cursor = self.db.cursor()
         self.ax = ax
-        self.title = name.replace('_', '')
+        self.title = name
         self.getinitdata()
         self.convdata()
 
     # 获取表内所有数据
     def getinitdata(self):  
-        self.room_temp= db_read(self.cursor, 'room_states', 'room_temp', 0)
-        self.outdoor_temp= db_read(self.cursor, 'room_states', 'outdoor_temp', 0)
-        self.FCU_fan_feedback= db_read(self.cursor, 'room_states', 'FCU_fan_feedback', 0)
-        self.FCU_onoff_feedback= db_read(self.cursor, 'room_states', 'FCU_onoff_feedback', 0)
+        self.room_temp= db_read(self.cursor, self.name, 'room_temp', 0)
+        self.outdoor_temp= db_read(self.cursor, self.name, 'outdoor_temp', 0)
+        self.FCU_fan_feedback= db_read(self.cursor, self.name, 'FCU_fan_feedback', 0)
+        self.FCU_onoff_feedback= db_read(self.cursor, self.name, 'FCU_onoff_feedback', 0)
+        self.occupant_num = db_read(self.cursor, self.name, 'occupant_num', 0)
+        #关闭数据库连接
+        self.db.close()
 
     # 转换数据成可以绘图的
     def convdata(self):
         self.dtime = [str(9 + i//60) + ":" + str(i%60) for i in range(0,601)]
         self.dtime = [parse(i) for i in self.dtime]
-    
+        
         self.temp = np.zeros(601)
         for rec in self.room_temp:
             self.temp[rec[0]] = rec[3]
@@ -62,54 +59,47 @@ class Room:
         for rec in self.FCU_onoff_feedback:
             self.FCU_onoff[rec[0]] = rec[3]
         self.FCU = self.FCU_fan * self.FCU_onoff
-        
+        self.number = np.zeros(601)
+        for rec in self.occupant_num:
+            self.number[rec[0]] = rec[3]
+
     # 绘制子图
     def display(self):
+        # self.dtime to float
         self.ax.plot(self.dtime, self.temp,'red', label = 'Indoor Temperature')
-        self.ax.plot(self.dtime, self.outdoortemp,'green', label = 'Outdoor Temperature')
+        self.ax.plot(self.dtime, self.outdoortemp,'orange', label = 'Outdoor Temperature')
+        self.ax.axhline(24, linestyle='--', color='green',label = 'Indoor Temperature Setpoint',linewidth = 1.2)
 
         self.ax2 = self.ax.twinx()
-        self.ax2.step(self.dtime, self.FCU,'royalblue',label = 'Fanspeed')
+        self.ax2.step(self.dtime, self.FCU,'royalblue',label = 'Fanspeed',linewidth = 1.2)
 
-        self.ax.legend(loc='upper left',frameon=True,fontsize = "medium")
-        self.ax2.legend(loc='upper right',frameon=True,fontsize = "medium")
+        self.ax.legend(loc='upper left',frameon=True,fontsize = 9)
+        self.ax2.legend(loc='upper right',frameon=True,fontsize = 9)
         
         self.ax.set_ylim(20,31)
-        # if self.name == "room_1":
-        #     self.ax.set_ylim(20,34)
-        # 设置坐标轴的最小值
-        self.ax2.set_ylim(-0.02,4)
+        self.ax2.set_ylim(-0.02,4.5)
         self.ax2.set_yticks([0,1,2,3])
-        self.ax2.set_yticklabels(['Off','Low','Medium','High'])    
-        for label in self.ax2.get_yticklabels():
-            label.set_rotation(90)
+        self.ax2.set_yticklabels(['Off','L','M','H'])    
+        # for label in self.ax2.get_yticklabels():
+        #     label.set_rotation(90)
         self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M')) 
         self.ax.set_xlabel("Time")
         self.ax.set_ylabel("Temperature(°C)")  #,rotation='horizontal')
         self.ax2.set_ylabel("Fanspeed Level")
         self.ax.set_title(self.title)
-
+        
 if __name__ == "__main__":
-    localpath = os.getcwd() + "/Dapp/Base/binding.csv"
-    # 读取节点信息
     fig = plt.figure(figsize=(16, 9))
     axlist = []
     roomlist = []
-    with open(localpath,'r')as f:
-        data = csv.reader(f)
-        binding = []
-        for i in data:
-            binding.append(i)
 
-    i = 0
-    for ele in binding[1:]:
-        if ele[2] == "pi":
-            if ele[1] != "offline" and i < 6:
-                ax = fig.add_subplot(3, 2, i+1)
-                room = Room(name = ele[0],ax = ax, host = ele[1])
-                room.display()
-                roomlist.append(room)
-                i += 1
+    nodelist = ["room1","room2","room3","room4","room5","room6"]
+
+    for i,node in enumerate(nodelist):
+        ax = fig.add_subplot(3, 2, i+1)
+        room = Room(name = node,ax = ax)
+        room.display()
+        roomlist.append(room)
     plt.tight_layout() 
     plt.rcParams['savefig.dpi'] = 300
     plt.show()

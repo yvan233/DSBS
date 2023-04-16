@@ -42,7 +42,7 @@ def db_read(cursor, table, name, num):               # num 为倒序读取数据
     return data
 
 
-def cal_fcu_fan(tem_s, tem_k, position_k, onoff_k, occ_list):
+def cal_fcu_fan(tem_s, tem_k, position_k, onoff_k):
     H = 3
     M = 2
     L = 1
@@ -55,54 +55,50 @@ def cal_fcu_fan(tem_s, tem_k, position_k, onoff_k, occ_list):
     position_s = L
     onoff_s = On
 
-    occ_sum = np.sum(occ_list)
-    if occ_sum == 0:
+    if tem_k - tem_s > a4:
+        position_s = H
+    elif a3 <= tem_k - tem_s < a4 and (position_k == M):
+        position_s = H
+    elif a3 < tem_k - tem_s <= a4 and (position_k == H):
+        position_s = H
+    elif a3 < tem_k - tem_s <= a4 and (position_k == L):
+        position_s = M
+    elif a3 < tem_k - tem_s <= a4 and (onoff_k == Off):
+        position_s = M
+    elif a2 < tem_k - tem_s <= a3 and (onoff_k == Off):
+        position_s = L
+    elif a2 < tem_k - tem_s <= a3 and (position_k == L):
+        position_s = M
+    elif a2 < tem_k - tem_s <= a3 and (position_k == M):
+        position_s = H
+    elif a2 < tem_k - tem_s <= a3 and (position_k == H):
+        position_s = H
+    elif a1 <= tem_k - tem_s < a2 and (onoff_k == Off):
+        position_s = L
+    elif a1 <= tem_k - tem_s < a2 and (position_k == L):
+        position_s = M
+    elif a1 < tem_k - tem_s <= a2 and (position_k == M):
+        position_s = M
+    elif a1 < tem_k - tem_s <= a2 and (position_k == H):
+        position_s = H
+    elif -a1 <= tem_k - tem_s < a1 and (onoff_k == Off):
+        position_s = L
+    elif -a1 <= tem_k - tem_s < a1 and (position_k == L):
+        position_s = L
+    elif -a1 < tem_k - tem_s <= a1 and (position_k == M):
+        position_s = M
+    elif -a1 < tem_k - tem_s <= a1 and (position_k == H):
+        position_s = M
+    elif -a2 < tem_k - tem_s <= -a1 and (position_k == H or position_k == M or position_k == L):
+        position_s = L
+    elif -a2 < tem_k - tem_s <= -a1 and ( onoff_k == Off):
         onoff_s = Off
-    else:
-        if tem_k - tem_s > a4:
-            position_s = H
-        elif a3 <= tem_k - tem_s < a4 and (position_k == M):
-            position_s = H
-        elif a3 < tem_k - tem_s <= a4 and (position_k == H):
-            position_s = H
-        elif a3 < tem_k - tem_s <= a4 and (position_k == L):
-            position_s = M
-        elif a3 < tem_k - tem_s <= a4 and (onoff_k == Off):
-            position_s = M
-        elif a2 < tem_k - tem_s <= a3 and (onoff_k == Off):
-            position_s = L
-        elif a2 < tem_k - tem_s <= a3 and (position_k == L):
-            position_s = M
-        elif a2 < tem_k - tem_s <= a3 and (position_k == M):
-            position_s = H
-        elif a2 < tem_k - tem_s <= a3 and (position_k == H):
-            position_s = H
-        elif a1 <= tem_k - tem_s < a2 and (onoff_k == Off):
-            position_s = L
-        elif a1 <= tem_k - tem_s < a2 and (position_k == L):
-            position_s = M
-        elif a1 < tem_k - tem_s <= a2 and (position_k == M):
-            position_s = M
-        elif a1 < tem_k - tem_s <= a2 and (position_k == H):
-            position_s = H
-        elif -a1 <= tem_k - tem_s < a1 and (onoff_k == Off):
-            position_s = L
-        elif -a1 <= tem_k - tem_s < a1 and (position_k == L):
-            position_s = L
-        elif -a1 < tem_k - tem_s <= a1 and (position_k == M):
-            position_s = M
-        elif -a1 < tem_k - tem_s <= a1 and (position_k == H):
-            position_s = M
-        elif -a2 < tem_k - tem_s <= -a1 and (position_k == H or position_k == M or position_k == L):
-            position_s = L
-        elif -a2 < tem_k - tem_s <= -a1 and ( onoff_k == Off):
-            onoff_s = Off
-        elif -a4 < tem_k - tem_s <= -a2 and (position_k == H):
-            position_s = L
-        elif -a4 < tem_k - tem_s <= -a2:
-            onoff_s = Off
-        elif tem_k - tem_s <= -a4:
-            onoff_s = Off
+    elif -a4 < tem_k - tem_s <= -a2 and (position_k == H):
+        position_s = L
+    elif -a4 < tem_k - tem_s <= -a2:
+        onoff_s = Off
+    elif tem_k - tem_s <= -a4:
+        onoff_s = Off
 
     return onoff_s, position_s
 
@@ -222,8 +218,8 @@ def taskFunction(self:Task, id, nbrDirection, datalist):
         tem_s, tem_k, position_k, onoff_k = R_room_node(db)
         position_s = position_k
         if step_min % 5 == 0:
-            occ_list = R_occ_his(db, step_min)
-            onoff_s, position_s = cal_fcu_fan(tem_s, tem_k, position_k, onoff_k, occ_list)
+            # occ_list = R_occ_his(db, step_min)
+            onoff_s, position_s = cal_fcu_fan(tem_s, tem_k, position_k, onoff_k)
             # temp_list, f_list, tws_list, twr_list = R_room_his(db, 10, step_min)     # length should be an even number
             # pQ = pre_Q(temp_list, f_list, tws_list, twr_list, position_s, tem_s)
         W_room_node_control(db, step_min, onoff_s, position_s)

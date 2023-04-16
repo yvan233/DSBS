@@ -11,7 +11,7 @@ g = 9.8
 Rc = 287.042
 max_iter = 100
 indoor_air_velocity = 0.15
-sup_temp = 12.0
+sup_temp = 14.0
 
 #Heat and damp
 c = 1.005   #  kJ/(kg*K)

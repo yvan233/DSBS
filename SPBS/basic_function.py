@@ -27,7 +27,7 @@ def cal_solar(day):
                 Itd[j][i] = It[j][i] + SF[i] * (1/3) * ((day - 80) / 93)
                 if Itd[j][i] < 0:
                     Itd[j][i] *= 0.4
-    if ((day >= 173) and (day < 256)):
+    if ((day >= 173) and (day < 266)):
         for i in range(0, 5):
             for j in range(0, 1440):
                 Itd[j][i] = It[j][i] + SF[i] * (1 / 3) * ((266 - day) / 93)
@@ -118,7 +118,7 @@ def W_pipenet(db, G, P, time):
     #db.commit()
 
 
-def W_room(db, room, fcu, list_num, time):
+def W_room(db, room, fcu, outdoor_temp, list_num, time):
     cursor = db.cursor()
     table_name = 'room' + str(list_num)
     sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
@@ -133,9 +133,17 @@ def W_room(db, room, fcu, list_num, time):
     # sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
     #       (table_name, time, '0x00000241', 'roomRH_setpoint', room.RH_set)
     # cursor.execute(sql)
-    # sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-    #       (table_name, time, '0x0000024A', 'room_Q', room.Q_load)
-    # cursor.execute(sql)
+
+    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.4f)" % \
+          (table_name, time, '0x0000023A', 'room_Qload', room.Q_load/60)
+    cursor.execute(sql)
+    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.4f)" % \
+          (table_name, time, '0x0000024A', 'room_Qa', room.Qa/60)
+    cursor.execute(sql)
+    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+          (table_name, time, '0x0000025A', 'outdoor_temp', outdoor_temp)
+    cursor.execute(sql)
+
     sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
           (table_name, time, '0x00000410', 'FCU_onoff_feedback', fcu.onoff)
     cursor.execute(sql)
@@ -162,6 +170,9 @@ def W_room(db, room, fcu, list_num, time):
     cursor.execute(sql)
     sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
           (table_name, time, '0x00000426', 'valve_feedback', fcu.valve_position)
+    cursor.execute(sql)
+    sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.4f)" % \
+          (table_name, time, '0x00000427', 'FCU_power', fcu.power)
     cursor.execute(sql)
     sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
           (table_name, time, '0x00000810', 'occupant_num', room.occupant_num)
@@ -323,6 +334,12 @@ def init_control_dis(db, type = "room"):
         cursor.execute(sql)
     db.commit()
 
+def R_room_occ(min, room):
+    if room.history_flag:
+        room.occupant_num = room.occupant_num_data[min+540]
+    else:
+        room.occupant_num = random.randint(0, 8)
+
 def R_room_control(db, r, fcu):
     # read current data
     table_name = 'room' + str(r+1) + '_control'
@@ -406,7 +423,7 @@ def R_heatpump_control(db, heatpump):
 
 
 # mz_nodes
-def W_room_node(db, room, fcu, time):
+def W_room_node(db, room, fcu, outdoor_temp, time):
     if db is not None:
         try:
             cursor = db.cursor()
@@ -422,9 +439,15 @@ def W_room_node(db, room, fcu, time):
             # sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
             #       (table_name, time, '0x00000241', 'roomRH_setpoint', room.RH_set)
             # cursor.execute(sql)
-            # sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-            #       (time, '0x0000024A', 'room_Q', room.Q_load)
-            # cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.4f)" % \
+                (time, '0x0000023A', 'room_Qload', room.Q_load/60)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.4f)" % \
+                (time, '0x0000024A', 'room_Qa', room.Qa/60)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                  (time, '0x0000025A', 'outdoor_temp', outdoor_temp)
+            cursor.execute(sql)
             sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
                 (time, '0x00000410', 'FCU_onoff_feedback', fcu.onoff)
             cursor.execute(sql)
@@ -451,6 +474,9 @@ def W_room_node(db, room, fcu, time):
             cursor.execute(sql)
             sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
                 (time, '0x00000426', 'valve_feedback', fcu.valve_position)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.4f)" % \
+                ( time, '0x00000427', 'FCU_power', fcu.power)
             cursor.execute(sql)
             sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
                 (time, '0x00000810', 'occupant_num', room.occupant_num)
@@ -465,7 +491,7 @@ def W_room_node(db, room, fcu, time):
     return db
 
 
-def W_room_node_noocc(db, room, fcu, time):
+def W_room_node_noocc(db, room, fcu, outdoor_temp, time):
     if db is not None:
         try:
             cursor = db.cursor()
@@ -481,9 +507,15 @@ def W_room_node_noocc(db, room, fcu, time):
             # sql = "INSERT INTO %s(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
             #       (table_name, time, '0x00000241', 'roomRH_setpoint', room.RH_set)
             # cursor.execute(sql)
-            # sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
-            #       (time, '0x0000024A', 'room_Q', room.Q_load)
-            # cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.4f)" % \
+                (time, '0x0000023A', 'room_Qload', room.Q_load/60)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.4f)" % \
+                (time, '0x0000024A', 'room_Qa', room.Qa/60)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
+                  (time, '0x0000025A', 'outdoor_temp', outdoor_temp)
+            cursor.execute(sql)
             sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
                 (time, '0x00000410', 'FCU_onoff_feedback', fcu.onoff)
             cursor.execute(sql)
@@ -510,6 +542,9 @@ def W_room_node_noocc(db, room, fcu, time):
             cursor.execute(sql)
             sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
                 (time, '0x00000426', 'valve_feedback', fcu.valve_position)
+            cursor.execute(sql)
+            sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.4f)" % \
+                ( time, '0x00000427', 'FCU_power', fcu.power)
             cursor.execute(sql)
             # sql = "INSERT INTO room_states(time, id ,name, value) VALUES (%d, '%s', '%s', %.1f)" % \
             #       (time, '0x00000810', 'occupant_num', room.occupant_num)
@@ -588,6 +623,26 @@ def W_heatpump_node(db, heatpump, hour, dry_bulb_t, damp, time):
             print(f"Error: unable to connect to {heatpump.name}")
     return db
 
+def R_room_node_occ(db, min, room):
+    if room.nano_flag:
+        if db is not None:
+            try:
+                cursor = db.cursor()
+                sql = "SELECT %s, %s, %s, %s FROM room_states WHERE name='occupant_num' order by time DESC limit 1" % ('time', 'id', 'name', 'value')
+                cursor.execute(sql)
+                data = cursor.fetchall()
+                if data:
+                    room.occupant_num = int(data[0][3])
+            except:
+                db = None
+                # print(f"Error: unable to connect to {room.name}")
+    else:
+        if room.history_flag:
+            room.occupant_num = room.occupant_num_data[min+540]
+        else:
+            room.occupant_num = random.randint(0, 8)
+    return db
+
 def R_room_node_control(db, fcu):
     if db is not None:
         try:
@@ -600,7 +655,7 @@ def R_room_node_control(db, fcu):
                     if int(data1[0][0]) != int(data1[2][0]):
                         time.sleep(0.1)
                     else:
-                        for i in range (0, 3):
+                        for i in range(6):
                             # assignment
                             if data1[i][2] == 'FCU_onoff_setpoint':
                                 fcu.onoff_set = int(data1[i][3])

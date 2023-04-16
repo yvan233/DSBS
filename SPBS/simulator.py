@@ -102,7 +102,7 @@ for n in range(0, nodes):
 W_pipenet(db, G_str, P_str, 0)
 # room record
 for r in range(0, 7):
-    W_room(db, room_list[r], fcu_list[r], r+1, 0)
+    W_room(db, room_list[r], fcu_list[r], dry_bulb_his[step_hour], r+1, 0)
 # pump record
 W_pump(db, pump_list[0], 1, 0)
 # heatpump record
@@ -207,9 +207,11 @@ for step_min in range (1, 601):      # min
             fan_onoff_s, fan_control_s = cal_fcu_fan(24, room_list[r].temp, fcu_list[r].fan_position, fcu_list[r].onoff, occ_list)       # Room control
             fcu_list[r].onoff_set = fan_onoff_s
             fcu_list[r].fan_set = fan_control_s
+            fcu_list[r].fan_position = fcu_list[r].fan_set
         fcu_list[r].cal_fan_G()
         fcu_list[r].cal_power()
         fcu_list[r].cal_supplyair(room_list[r].temp)
+        R_room_occ(step_min, room_list[r])
         room_list[r].cal_room(dry_bulb_his[step_hour], step_min, rou, fcu_list[r].G_fan)
         fcu_list[r].cal_returntemp(room_list[r].Qa / 60)
         return_sum += 0.95 * fcu_list[r].waterflow * fcu_list[r].tw_return
@@ -238,7 +240,7 @@ for step_min in range (1, 601):      # min
     W_pipenet(db, G_str, P_str, step_min)
     # room record
     for r in range(0, 7):
-        W_room(db, room_list[r], fcu_list[r], r+1, step_min)
+        W_room(db, room_list[r], fcu_list[r], dry_bulb_his[step_hour], r+1, step_min)
         write_room_control(db, step_min, r, fcu_list[r].onoff_set, fcu_list[r].fan_set, fcu_list[r].mode, fcu_list[r].valve_set)
     db.commit()
     # pump record

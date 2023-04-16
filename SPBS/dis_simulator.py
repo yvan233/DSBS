@@ -17,6 +17,8 @@ DB_LIST = ["room", "pump", "heatpump"]
 
 INTERVAL = 6
 
+room_list[0].nano_flag = True
+
 # Initialization
 # Time
 init_time = 5289  # August 9th 9:00am
@@ -141,7 +143,7 @@ for n in range(0, nodes):
 W_pipenet(db, G_str, P_str, 0)
 # room record
 for r in range(0, 7):
-    W_room(db, room_list[r], fcu_list[r], r+1, 0)
+    W_room(db, room_list[r], fcu_list[r], dry_bulb_his[step_hour], r+1, 0)
 # pump record
 W_pump(db, pump_list[0], 1, 0)
 # heatpump record
@@ -152,9 +154,9 @@ db.commit()
 
 for r in range(0, 7):
     if r > 0:
-        db_list[r] = W_room_node(db_list[r], room_list[r], fcu_list[r], 0)
+        db_list[r] = W_room_node(db_list[r], room_list[r], fcu_list[r], dry_bulb_his[step_hour], 0)
     else:
-        db_list[r] = W_room_node_noocc(db_list[r], room_list[r], fcu_list[r], 0)
+        db_list[r] = W_room_node_noocc(db_list[r], room_list[r], fcu_list[r], dry_bulb_his[step_hour], 0)
 dbp = W_pump_node(dbp, pump_list[0], 0)
 dbhp = W_heatpump_node(dbhp, heatpump, step_hour, dry_bulb_his, damp_his, 0)
 print('DB initialization finished')
@@ -244,28 +246,10 @@ for step_min in range(1, 601):      # min
     P -= (P[11][0] - 10000) * np.ones((nodes, 1))
     for r in range(0, 7):
         rou = cal_density(sup_temp)
-        if step_min % 5 == 0:
-            if step_min >= 5:
-                # get occ list
-                occ_list = np.zeros(5)
-                sql = "SELECT %s, %s, %s, %s FROM room_states WHERE name='occupant_num' order by time DESC limit 5" % ('time', 'id', 'name', 'value')
-                if cursor_list[r] is not None:
-                    try:
-                        cursor_list[r].execute(sql)
-                        occ_data = cursor_list[r].fetchall()
-                    except:
-                        print(f"Error: unable to connect to room{r+1}")
-                        db_list[r] = None
-                        cursor_list[r] = None
-                for i in range(0, len(occ_data)):
-                    occ_list[len(occ_data) - 1 - i] = float(occ_data[i][3])
-            # fan control
-            fan_onoff_s, fan_control_s = cal_fcu_fan(24, room_list[r].temp, fcu_list[r].fan_position, fcu_list[r].onoff, occ_list)       # Room control
-            fcu_list[r].onoff_set = fan_onoff_s
-            fcu_list[r].fan_set = fan_control_s
         fcu_list[r].cal_fan_G()
         fcu_list[r].cal_power()
         fcu_list[r].cal_supplyair(room_list[r].temp)
+        R_room_node_occ(db_list[r], step_min, room_list[r])
         room_list[r].cal_room(dry_bulb_his[step_hour], step_min, rou, fcu_list[r].G_fan)
         fcu_list[r].cal_returntemp(room_list[r].Qa / 60)
         return_sum += 0.95 * fcu_list[r].waterflow * fcu_list[r].tw_return
@@ -294,7 +278,7 @@ for step_min in range(1, 601):      # min
     W_pipenet(db, G_str, P_str, step_min)
     # room record
     for r in range(0, 7):
-        W_room(db, room_list[r], fcu_list[r], r+1, step_min)
+        W_room(db, room_list[r], fcu_list[r], dry_bulb_his[step_hour], r+1, step_min)
         write_room_control(db, step_min, r, fcu_list[r].onoff_set, fcu_list[r].fan_set, fcu_list[r].mode, fcu_list[r].valve_set)
     db.commit()
     # pump record
@@ -311,9 +295,9 @@ for step_min in range(1, 601):      # min
     # send states to nodes
     for r in range(0, 7):
         if r > 0:
-            db_list[r] = W_room_node(db_list[r], room_list[r], fcu_list[r], step_min)
+            db_list[r] = W_room_node(db_list[r], room_list[r], fcu_list[r], dry_bulb_his[step_hour], step_min)
         else:
-            db_list[r] = W_room_node_noocc(db_list[r], room_list[r], fcu_list[r], step_min)
+            db_list[r] = W_room_node_noocc(db_list[r], room_list[r], fcu_list[r], dry_bulb_his[step_hour], step_min)
     dbp = W_pump_node(dbp, pump_list[0], step_min)
     dbhp = W_heatpump_node(dbhp, heatpump, step_hour, dry_bulb_his, damp_his, step_min)
 

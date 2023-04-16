@@ -1,6 +1,6 @@
 from reference import *
 import random
-
+import csv
 
 class ZONE():
     def __init__(self, name, area, occ_list_length):
@@ -17,7 +17,7 @@ class ZONE():
         self.leakage_area = 0.0   #  m2
         self.wall_area = [0, 0, 0, 0]   #  N, W, S, E, Roof
         self.rou = 1.293 * (273.15 / (self.temp + 273.15))
-        self.sup_temp = 12
+        self.sup_temp = 14
         self.sup_airflow = 0.         #  m3/min
         self.return_airflow = 0.      #  m3/min
         self.sup_temp = sup_temp      #  oC
@@ -41,14 +41,26 @@ class ZONE():
         self.occupant_list = np.zeros(occ_list_length)
         self.occupant_trans_list = np.zeros(occ_list_length)
 
+        self.occupant_num_data = []
+        path = f"./honeycomb_data/room_{self.name[4]}_result.csv"
+        with open(path) as csv_file:
+            csv_reader = csv.reader(csv_file)
+            next(csv_reader)
+            for row in csv_reader:
+                self.occupant_num_data.append(int(row[1]))
+
         # Alarm
         self.temp_alarm = 0
         self.RH_alarm = 0
         self.pandemic_alarm = 0
 
+        # Nano
+        self.nano_flag = False
+        self.history_flag = True
 
     def cal_room(self, dry_bulb_t, min, rou, G_fan):  # min
-        self.occupant_num = random.randint(0, 8)
+        # self.occupant_num = self.occupant_num_data[min+541]
+        # self.occupant_num = random.randint(0, 8)
         self.occupant_trans = self.occupant_num - self.occupant_list[-1]
         for o in range(0, len(self.occupant_list)):
             if o < (len(self.occupant_list) - 1):
@@ -57,20 +69,20 @@ class ZONE():
             else:
                 self.occupant_list[o] = self.occupant_num
                 self.occupant_trans_list[o] = self.occupant_trans
-        self.Qa = c * rou * G_fan/60 * (sup_temp - self.temp)
+        self.Qa = c * rou * G_fan/60 * (self.sup_temp - self.temp)
         #self.Qa = c * rou * G_fan / 60 * (17 - self.temp)
         self.Qw = 0
         self.DT = dry_bulb_t - self.temp
-        self.TDeqr = self.DT + (alpha * Rsor * Itd[min][4])
+        self.TDeqr = self.DT + (alpha * Rsor * Itd[min+540][4])
         f = 0.3    # Factor of envelope
         for i in range (0, 4):
-            self.TDeqw[i] = self.DT + (alpha * Rsow * Itd[min][i])
+            self.TDeqw[i] = self.DT + (alpha * Rsow * Itd[min+540][i])
         for j in range (0, 4):
-            self.Qw += self.wall_area[j] * ((1-WWR)*self.TDeqw[j]*Uw+WWR*self.DT*Uf+WWR*Sc*Itd[min][j])
+            self.Qw += self.wall_area[j] * ((1-WWR)*self.TDeqw[j]*Uw+WWR*self.DT*Uf+WWR*Sc*Itd[min+540][j])
         self.Qe = f * self.Qw
         self.Qp = 60 * self.occupant_num * (qp*((37.0 - self.temp)/(37.0 - 24.0)) + qd)
         self.Q_load = self.Qe + self.Qp              #  kJ/min
-        self.temp += (self.Q_load + self.Qa) / c / self.rou / self.volume
+        self.temp += 0.5 * (self.Q_load + self.Qa) / c / self.rou / self.volume
 
     def cal_damp(self):
         pass
@@ -142,10 +154,13 @@ class FCU():
             self.onoff = 1
             if self.fan_position == 1:
                 self.G_fan = self.G_L
-            if self.fan_position == 2:
+            elif self.fan_position == 2:
                 self.G_fan = self.G_M
-            if self.fan_position == 3:
+            elif self.fan_position == 3:
                 self.G_fan = self.G_H
+            else:
+                self.onoff = 0
+                self.G_fan = 0
 
     def cal_supplyair(self,room_t):
         if self.mode == 1:
@@ -175,7 +190,7 @@ class FCU():
                 self.tw_return = self.tw_supply - Q / (self.eta_Qh_H * c * 1000 * self.waterflow)
 
     def cal_power(self):
-        if self.fan_position == 0:
+        if self.fan_position == 0 or self.onoff_set == 0:
             self.power = 0
         if self.fan_position == 1:
             self.power = pow((self.G_L / self.G_H), 1.5) * self.power_basic
