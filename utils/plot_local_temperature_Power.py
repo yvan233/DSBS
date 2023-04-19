@@ -1,10 +1,6 @@
-# 读取数据库并绘制温度曲线
-import time
 import pymysql
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.animation import FuncAnimation
-import matplotlib.animation as animation
 import matplotlib.dates as mdates
 from dateutil.parser import parse
 
@@ -34,7 +30,6 @@ class Room:
         self.getinitdata()
         self.convdata()
 
-    # 获取表内所有数据
     def getinitdata(self):  
         self.room_temp= db_read(self.cursor, self.name, 'room_temp', 0)
         self.outdoor_temp= db_read(self.cursor, self.name, 'outdoor_temp', 0)
@@ -44,7 +39,6 @@ class Room:
         self.Qa= db_read(self.cursor, self.name, 'room_Qa', 0)
         self.FCU_power = db_read(self.cursor, self.name, 'FCU_power', 0)
 
-    # 转换数据成可以绘图的
     def convdata(self):
         self.dtime = [str(9 + i//60) + ":" + str(i%60) for i in range(0,601)]
         self.dtime = [parse(i) for i in self.dtime]
@@ -71,17 +65,13 @@ class Room:
         self.FCUpower = np.zeros(601)
         for rec in self.FCU_power:
             self.FCUpower[rec[0]] = rec[3]
-        
 
-    # 获取新增数据，防止对数据库造成过大的数据压力
     def updatedata(self):
         self.room_temp= db_read(self.cursor, self.name, 'room_temp', 0)
 
-    # 清空子图
     def clear(self):
         self.ax.clear()
         
-    # 绘制子图
     def display(self):
         self.ax.plot(self.dtime, self.temp,'red', label = 'Temperature')
         # self.ax.plot(self.dtime, self.outdoortemp,'green', label = 'Outdoor Temperature')
@@ -99,7 +89,7 @@ class Room:
             label.set_rotation(90)
         self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M')) 
         self.ax.set_xlabel("Time")
-        self.ax.set_ylabel("Temperature(°C)")  #,rotation='horizontal')
+        self.ax.set_ylabel("Temperature(°C)")
         self.ax2.set_ylabel("Power(kW)")
         self.ax.set_title(self.title)
 

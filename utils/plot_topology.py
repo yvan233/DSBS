@@ -1,5 +1,4 @@
 import sys
-import time
 import matplotlib
 import networkx as nx
 import json
@@ -19,9 +18,9 @@ class App(QWidget):
     
     all_nodes=['room_1','room_2','room_3','room_4','room_5','room_6','room_7','pump','heatpump']
     all_nodeslabel=['R1','R2','R3','R4','R5','R6','R7','P','HP']
-    all_coordinates = [[1, 3], [3, 3], [5, 3], [1, 1], [3, 1], [5, 1], [7, 1], [6.25, 3], [7.75, 3]]  #节点标签，需要自定义
-    all_npos = dict(zip(all_nodes, all_coordinates))  # 节点与坐标之间的映射关系
-    all_nlabels = dict(zip(all_nodes, all_nodeslabel))  # 节点与标签之间的映射关系
+    all_coordinates = [[1, 3], [3, 3], [5, 3], [1, 1], [3, 1], [5, 1], [7, 1], [6.25, 3], [7.75, 3]]
+    all_npos = dict(zip(all_nodes, all_coordinates)) 
+    all_nlabels = dict(zip(all_nodes, all_nodeslabel)) 
     all_edges=[
         ['room_1','room_2'],
         ['room_1','room_4'],
@@ -39,7 +38,6 @@ class App(QWidget):
     iter_edges = 0
 
     def __init__(self, parent=None):
-        # 父类初始化方法
         super(App, self).__init__(parent)
         self.initUI()
 
@@ -54,14 +52,10 @@ class App(QWidget):
         # self.endBtn = QPushButton('end')
         self.startBtn.clicked.connect(self.startTimer)
         # self.endBtn.clicked.connect(self.endTimer)
-        # 时间模块
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.showTime)
-        #图像模块
         self.figure = plt.figure("node")
         self.canvas = FigureCanvas(self.figure)
-
-        #垂直布局
         layout=QVBoxLayout()
         layout.addWidget(self.startBtn)
         # layout.addWidget(self.endBtn)
@@ -105,24 +99,22 @@ class App(QWidget):
                     edge_color.append("#AAAAAA")
 
         G.add_nodes_from(self.all_nodes)
-        nx.draw_networkx_nodes(G, self.all_npos, node_size=400, node_color=node_color)  # 绘制节点
-        nx.draw_networkx_edges(G, self.all_npos, self.all_edges,  width = 3, edge_color=edge_color)  # 绘制边
-        nx.draw_networkx_labels(G, self.all_npos, self.all_nlabels)  # 标签
+        nx.draw_networkx_nodes(G, self.all_npos, node_size=400, node_color=node_color) 
+        nx.draw_networkx_edges(G, self.all_npos, self.all_edges,  width = 3, edge_color=edge_color) 
+        nx.draw_networkx_labels(G, self.all_npos, self.all_nlabels)  
 
         self.canvas.draw()
-    # 启动函数
+
     def startTimer(self):
-        # 设置计时间隔并启动
-        self.timer.start(500)#每隔一秒执行一次绘图函数 showTime
-        self.startBtn.setEnabled(False)#开始按钮变为禁用
-        # self.endBtn.setEnabled(True)#结束按钮变为可用
+        self.timer.start(500)
+        self.startBtn.setEnabled(False)
+        # self.endBtn.setEnabled(True)
 
     def endTimer(self):
-        self.timer.stop()#计时停止
-        self.startBtn.setEnabled(True)#开始按钮变为可用
-        self.endBtn.setEnabled(False)#结束按钮变为可用
+        self.timer.stop()
+        self.startBtn.setEnabled(True)
+        self.endBtn.setEnabled(False)
 
-# 运行程序
 if __name__ == '__main__':
     # QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
     app = QApplication(sys.argv)

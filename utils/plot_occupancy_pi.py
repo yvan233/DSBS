@@ -1,10 +1,7 @@
-# 读取数据库并绘制温度曲线
 import os
 import csv
 import pymysql
 from matplotlib import pyplot as plt
-from matplotlib.animation import FuncAnimation
-import matplotlib.animation as animation
 import matplotlib.dates as mdates
 from dateutil.parser import parse
 
@@ -12,8 +9,6 @@ HOST="localhost"
 USER="root"
 PASSWORD="cfins"
 DB="room"
-
-
 
 def db_read(cursor, table, name, num): 
     if num == 0:
@@ -36,22 +31,18 @@ class Room:
         self.getinitdata()
         self.convdata()
 
-    # 获取表内所有数据
     def getinitdata(self):  
         self.occupant_num= db_read(self.cursor, 'room_states', 'occupant_num', 0)
         self.FCU_onoff= db_read(self.cursor, 'room_states', 'FCU_onoff_feedback', 0)
 
-    # 转换数据成可以绘图的
     def convdata(self):
         self.dtime = [int(record[0]) for record in self.FCU_onoff]
-        # 将[1,600]的dtime映射到9点-19点的str字符串
         self.dtime = [str(9 + i//60) + ":" + str(i%60) for i in self.dtime]
         self.dtime = [parse(i) for i in self.dtime]
 
         self.occupancy = [float(record[3]) for record in self.occupant_num]
         self.FCU_onoff = [float(record[3]) for record in self.FCU_onoff]
-        
-    # 绘制子图
+
     def display(self):
         if self.name == "room_1":
 
@@ -67,11 +58,10 @@ class Room:
             self.ax2.set_yticklabels(['Off','On'])    
             self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M')) 
             self.ax.set_xlabel("Time")
-            self.ax.set_ylabel("Occupant Number")  #,rotation='horizontal')
+            self.ax.set_ylabel("Occupant Number") 
             self.ax2.set_ylabel("On-off State")
             self.ax.set_title(self.title)
         else:
-            # occupancy转换成01
             self.occupancy = [0 if i == 0 else 1 for i in self.occupancy]
             self.ax.step(self.dtime, self.occupancy,'red', label = 'Occupancy')
 
@@ -87,13 +77,12 @@ class Room:
             self.ax2.set_yticklabels(['Off','On'])    
             self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M')) 
             self.ax.set_xlabel("Time")
-            self.ax.set_ylabel("Occupancy")  #,rotation='horizontal')
+            self.ax.set_ylabel("Occupancy") 
             self.ax2.set_ylabel("On-off State")
             self.ax.set_title(self.title)
 
 if __name__ == "__main__":
     localpath = os.getcwd() + "/Dapp/Base/binding.csv"
-    # 读取节点信息
     fig = plt.figure(figsize=(16, 9))
     axlist = []
     roomlist = []

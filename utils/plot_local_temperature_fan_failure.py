@@ -1,4 +1,3 @@
-# 读取数据库并绘制温度曲线
 import pymysql
 import numpy as np
 from matplotlib import pyplot as plt
@@ -8,7 +7,7 @@ from dateutil.parser import parse
 HOST="localhost"
 USER="root"
 PASSWORD="cfins"
-DB="mingze_simulator_failure"
+DB="mingze_simulator"
 
 def db_read(cursor, table, name, num): 
     if num == 0:
@@ -67,18 +66,13 @@ class Room:
 
         self.ax2 = self.ax.twinx()
         self.ax2.step(self.dtime, self.FCU,'royalblue',label = 'Fanspeed',linewidth = 1.2)
-        # self.ax2.fill_between(self.dtime, self.number,color = 'grey',edgecolor = 'None',label = 'Occupancy',alpha = 0.5)
-
         self.ax.legend(loc='upper left',frameon=True,fontsize = 9)
         self.ax2.legend(loc='upper right',frameon=True,fontsize = 9)
-        
-        # self.ax.set_xlim(self.dtime[0],self.dtime[-1])
+
         self.ax.set_ylim(20,31)
         self.ax2.set_ylim(-0.02,4.5)
         self.ax2.set_yticks([0,1,2,3])
         self.ax2.set_yticklabels(['Off','L','M','H'])    
-        # for label in self.ax2.get_yticklabels():
-        #     label.set_rotation(90)
         self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M')) 
         self.ax.set_xlabel("Time")
         self.ax.set_ylabel("Temperature(°C)")  #,rotation='horizontal')
@@ -117,7 +111,7 @@ class Room:
         self.ax2.set_yticklabels(['Off','L','M','H'])    
         self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M')) 
         self.ax.set_xlabel("Time")
-        self.ax.set_ylabel("Temperature(°C)")  #,rotation='horizontal')
+        self.ax.set_ylabel("Temperature(°C)") 
         self.ax2.set_ylabel("Fanspeed Level")
         self.ax.set_title(self.title)
         

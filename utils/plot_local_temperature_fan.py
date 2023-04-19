@@ -1,4 +1,3 @@
-# 读取数据库并绘制温度曲线
 import pymysql
 import numpy as np
 from matplotlib import pyplot as plt
@@ -8,7 +7,7 @@ from dateutil.parser import parse
 HOST="localhost"
 USER="root"
 PASSWORD="cfins"
-DB="mingze_simulator_occ"
+DB="mingze_simulator"
 
 def db_read(cursor, table, name, num): 
     if num == 0:
@@ -31,17 +30,14 @@ class Room:
         self.getinitdata()
         self.convdata()
 
-    # 获取表内所有数据
     def getinitdata(self):  
         self.room_temp= db_read(self.cursor, self.name, 'room_temp', 0)
         self.outdoor_temp= db_read(self.cursor, self.name, 'outdoor_temp', 0)
         self.FCU_fan_feedback= db_read(self.cursor, self.name, 'FCU_fan_feedback', 0)
         self.FCU_onoff_feedback= db_read(self.cursor, self.name, 'FCU_onoff_feedback', 0)
         self.occupant_num = db_read(self.cursor, self.name, 'occupant_num', 0)
-        #关闭数据库连接
         self.db.close()
 
-    # 转换数据成可以绘图的
     def convdata(self):
         self.dtime = [str(9 + i//60) + ":" + str(i%60) for i in range(0,601)]
         self.dtime = [parse(i) for i in self.dtime]
@@ -63,9 +59,7 @@ class Room:
         for rec in self.occupant_num:
             self.number[rec[0]] = rec[3]
 
-    # 绘制子图
     def display(self):
-        # self.dtime to float
         self.ax.plot(self.dtime, self.temp,'red', label = 'Indoor temperature')
         self.ax.plot(self.dtime, self.outdoortemp,'orange', label = 'Outdoor temperature')
         self.ax.axhline(24, linestyle='--', color='green',label = 'Indoor temperature setpoint',linewidth = 1.2)
@@ -80,11 +74,9 @@ class Room:
         self.ax2.set_ylim(-0.02,4.5)
         self.ax2.set_yticks([0,1,2,3])
         self.ax2.set_yticklabels(['Off','L','M','H'])    
-        # for label in self.ax2.get_yticklabels():
-        #     label.set_rotation(90)
         self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M')) 
         self.ax.set_xlabel("Time")
-        self.ax.set_ylabel("Temperature(°C)")  #,rotation='horizontal')
+        self.ax.set_ylabel("Temperature(°C)")
         self.ax2.set_ylabel("Fanspeed Level")
         self.ax.set_title(self.title)
         
@@ -100,5 +92,6 @@ if __name__ == "__main__":
         room = Room(name = node,ax = ax)
         room.display()
         roomlist.append(room)
+    plt.tight_layout() 
     plt.rcParams['savefig.dpi'] = 300
     plt.show()

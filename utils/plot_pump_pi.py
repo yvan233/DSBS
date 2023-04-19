@@ -1,4 +1,3 @@
-# 读取数据库并绘制温度曲线
 import os
 import csv
 import pymysql
@@ -34,16 +33,13 @@ class Pump:
         self.getinitdata()
         self.convdata()
 
-    # 获取表内所有数据
     def getinitdata(self):  
         self.pump_supplytemp= db_read(self.cursor, 'pump_states', 'pump_supplytemp', 0)
         self.pump_returntemp= db_read(self.cursor, 'pump_states', 'pump_returntemp', 0)
         self.pump_frequency= db_read(self.cursor, 'pump_states', 'pump_frequency_feedback', 0)
 
-    # 转换数据成可以绘图的
     def convdata(self):
         self.dtime = [int(record[0]) for record in self.pump_supplytemp]
-        # 将[1,600]的dtime映射到9点-19点的str字符串
         self.dtime = [str(9 + i//60) + ":" + str(i%60) for i in self.dtime]
         self.dtime = [parse(i) for i in self.dtime]
 
@@ -51,7 +47,6 @@ class Pump:
         self.pump_returntemp = [float(record[3]) for record in self.pump_returntemp]
         self.pump_frequency = [float(record[3]) for record in self.pump_frequency]
         
-    # 绘制子图
     def display(self):
         self.ax.plot(self.dtime, self.pump_supplytemp,'red', label = 'Supply Temperature')
         self.ax.plot(self.dtime, self.pump_returntemp,'royalblue', label = 'Return Temperature')
@@ -62,11 +57,10 @@ class Pump:
         self.ax.legend(loc='upper left',frameon=True,fontsize = "medium")
         self.ax2.legend(loc='upper right',frameon=True,fontsize = "medium")
 
-        # self.ax2.set_yticks([0,1,2,3])
-        # self.ax2.set_yticklabels(['Set_off','Low','Medium','High'])    
+ 
         self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M')) 
         self.ax.set_xlabel("Time")
-        self.ax.set_ylabel("Temperature(°C)")  #,rotation='horizontal')
+        self.ax.set_ylabel("Temperature(°C)") 
         self.ax2.set_ylabel("Frequency(Hz)")
         self.ax.set_title(self.title)
 

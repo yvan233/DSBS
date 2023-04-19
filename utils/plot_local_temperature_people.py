@@ -1,4 +1,3 @@
-# 读取数据库并绘制温度曲线
 import pymysql
 import numpy as np
 from matplotlib import pyplot as plt
@@ -31,17 +30,14 @@ class Room:
         self.getinitdata()
         self.convdata()
 
-    # 获取表内所有数据
     def getinitdata(self):  
         self.room_temp= db_read(self.cursor, self.name, 'room_temp', 0)
         self.outdoor_temp= db_read(self.cursor, self.name, 'outdoor_temp', 0)
         self.FCU_fan_feedback= db_read(self.cursor, self.name, 'FCU_fan_feedback', 0)
         self.FCU_onoff_feedback= db_read(self.cursor, self.name, 'FCU_onoff_feedback', 0)
         self.occupant_num = db_read(self.cursor, self.name, 'occupant_num', 0)
-        #关闭数据库连接
         self.db.close()
 
-    # 转换数据成可以绘图的
     def convdata(self):
         self.dtime = [str(9 + i//60) + ":" + str(i%60) for i in range(0,601)]
         self.dtime = [parse(i) for i in self.dtime]
@@ -75,8 +71,6 @@ class Room:
                 self.x2.append(self.dtime[i])
                 self.y2.append(self.temp[i])
         
-
-    # 绘制子图
     def display(self):
         self.ax.scatter(self.x2, self.y2,marker='^', color = 'y', s = 25, label='Temperature without occupants')
         self.ax.scatter(self.x1, self.y1,marker='o', color = 'purple', s = 25, label='Temperature with occupants')
