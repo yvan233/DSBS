@@ -31,17 +31,14 @@ class Room:
         self.getinitdata()
         self.convdata()
 
-    # 获取表内所有数据
     def getinitdata(self):  
         self.room_temp= db_read(self.cursor, self.name, 'room_temp', 0)
         self.outdoor_temp= db_read(self.cursor, self.name, 'outdoor_temp', 0)
         self.FCU_fan_feedback= db_read(self.cursor, self.name, 'FCU_fan_feedback', 0)
         self.FCU_onoff_feedback= db_read(self.cursor, self.name, 'FCU_onoff_feedback', 0)
         self.occupant_num = db_read(self.cursor, self.name, 'occupant_num', 0)
-        #关闭数据库连接
         self.db.close()
 
-    # 转换数据成可以绘图的
     def convdata(self):
         self.dtime = [str(9 + i//60) + ":" + str(i%60) for i in range(0,601)]
         self.dtime = [parse(i) for i in self.dtime]
@@ -63,11 +60,10 @@ class Room:
         for rec in self.occupant_num:
             self.number[rec[0]] = rec[3]
 
-    # 绘制子图
     def display(self):
-        self.ax.plot(self.dtime, self.temp,'red', label = 'Indoor Temperature')
-        self.ax.plot(self.dtime, self.outdoortemp,'orange', label = 'Outdoor Temperature')
-        self.ax.axhline(24, linestyle='--', color='green',label = 'Indoor Temperature Setpoint',linewidth = 1.2)
+        self.ax.plot(self.dtime, self.temp,'red', label = 'Indoor temperature')
+        self.ax.plot(self.dtime, self.outdoortemp,'orange', label = 'Outdoor temperature')
+        self.ax.axhline(24, linestyle='--', color='green',label = 'Indoor temperature setpoint',linewidth = 1.2)
 
         self.ax2 = self.ax.twinx()
         self.ax2.step(self.dtime, self.FCU,'royalblue',label = 'Fanspeed',linewidth = 1.2)
@@ -90,20 +86,15 @@ class Room:
         self.ax.set_title(self.title)
         
 
-    def display_failure(self):
-        step_a = 35
-        step_b = 126
-        self.ax.plot(self.dtime[:step_a], self.temp[:step_a],'red', label = 'Indoor Temperature')
+    def display_failure(self, step_a, step_b):
+        self.ax.plot(self.dtime[:step_a], self.temp[:step_a],'red', label = 'Indoor temperature')
         self.ax.plot(self.dtime[step_a:step_b], self.temp[step_a:step_b],'red', linestyle=':',linewidth = 1.2)
         self.ax.plot(self.dtime[step_b:], self.temp[step_b:],'red')
-        self.ax.plot(self.dtime[:step_a], self.outdoortemp[:step_a],'orange', label = 'Outdoor Temperature')
+        self.ax.plot(self.dtime[:step_a], self.outdoortemp[:step_a],'orange', label = 'Outdoor temperature')
         self.ax.plot(self.dtime[step_a:step_b], self.outdoortemp[step_a:step_b],'orange', linestyle=':',linewidth = 1.2)
         self.ax.plot(self.dtime[step_b:], self.outdoortemp[step_b:],'orange')
 
-        self.ax.axhline(24, xmin=0, xmax=601, linestyle='--', color='green',label = 'Indoor Temperature Setpoint',linewidth = 1.2)
-
-
-
+        self.ax.axhline(24, xmin=0, xmax=601, linestyle='--', color='green',label = 'Indoor temperature setpoint',linewidth = 1.2)
         self.ax.axvline(self.dtime[step_a], ymin=0, ymax=5, linestyle='--', color='gray')
         self.ax.axvline(self.dtime[step_b], ymin=0, ymax=5, linestyle='--', color='gray')
         # self.ax.axhline(24, xmin=0, xmax=601, linestyle='-', color='yellow')
@@ -124,8 +115,6 @@ class Room:
         self.ax2.set_ylim(-0.02,4.5)
         self.ax2.set_yticks([0,1,2,3])
         self.ax2.set_yticklabels(['Off','L','M','H'])    
-        for label in self.ax2.get_yticklabels():
-            label.set_rotation(90)
         self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M')) 
         self.ax.set_xlabel("Time")
         self.ax.set_ylabel("Temperature(°C)")  #,rotation='horizontal')
@@ -143,7 +132,7 @@ if __name__ == "__main__":
         ax = fig.add_subplot(3, 2, i+1)
         room = Room(name = node,ax = ax)
         if node == "room1":
-            room.display_failure()
+            room.display_failure(step_a = 35, step_b = 126)
         else:
             room.display()
         roomlist.append(room)

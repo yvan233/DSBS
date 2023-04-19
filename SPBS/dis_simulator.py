@@ -9,18 +9,23 @@ USER="root"
 PASSWORD="cfins"
 DB="mingze_simulator"
 
-HOST_LIST = ["192.168.3.3", "192.168.3.4", "192.168.3.6", "192.168.3.7", "192.168.3.8",
-             "192.168.3.9", "192.168.3.10", "192.168.3.11", "192.168.3.26"]
 USER_LIST = ["root"]
 PASSWORD_LIST = ["cfins"]
 DB_LIST = ["room", "pump", "heatpump"]
+HOST_LIST = ["192.168.3.3", "192.168.3.4", "192.168.3.6", "192.168.3.7", "192.168.3.8",
+             "192.168.3.9", "192.168.3.10", "192.168.3.11", "192.168.3.26"]
 
-INTERVAL = 6
+Nano_List = [True, False, False, False, False, False, False]
+History_List = [True, True, True, True, True, True, True]
 
-room_list[0].nano_flag = True
+
+for r in range(0, 7):
+    room_list[r].nano_flag = Nano_List[r]
+    room_list[r].history_flag = History_List[r]
 
 # Initialization
 # Time
+INTERVAL = 6
 init_time = 5289  # August 9th 9:00am
 step_hour = init_time
 # Initialize matrices

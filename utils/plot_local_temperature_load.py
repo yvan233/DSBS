@@ -11,7 +11,7 @@ from dateutil.parser import parse
 HOST="localhost"
 USER="root"
 PASSWORD="cfins"
-DB="mingze_simulator_occ"
+DB="mingze_simulator"
 
 def db_read(cursor, table, name, num): 
     if num == 0:
@@ -74,11 +74,11 @@ class Room:
         
     # 绘制子图
     def display(self):
-        self.ax.plot(self.dtime, self.temp,'red', label = 'Indoor Temperature')
-        self.ax.plot(self.dtime, self.outdoortemp,'orange', label = 'Outdoor Temperature')
+        self.ax.plot(self.dtime, self.temp,'red', label = 'Indoor temperature')
+        self.ax.plot(self.dtime, self.outdoortemp,'orange', label = 'Outdoor temperature')
 
         self.ax2 = self.ax.twinx()
-        self.ax2.plot(self.dtime, self.Q,'royalblue',label = 'Cooling Load')
+        self.ax2.plot(self.dtime, self.Q,'royalblue',label = 'Cooling load')
 
         self.ax.legend(loc='upper left',frameon=True,fontsize = 9)
         self.ax2.legend(loc='upper right',frameon=True,fontsize = 9)

@@ -8,7 +8,7 @@ from dateutil.parser import parse
 HOST="localhost"
 USER="root"
 PASSWORD="cfins"
-DB="mingze_simulator_noocc"
+DB="mingze_simulator_occ"
 
 def db_read(cursor, table, name, num): 
     if num == 0:
@@ -66,9 +66,9 @@ class Room:
     # 绘制子图
     def display(self):
         # self.dtime to float
-        self.ax.plot(self.dtime, self.temp,'red', label = 'Indoor Temperature')
-        self.ax.plot(self.dtime, self.outdoortemp,'orange', label = 'Outdoor Temperature')
-        self.ax.axhline(24, linestyle='--', color='green',label = 'Indoor Temperature Setpoint',linewidth = 1.2)
+        self.ax.plot(self.dtime, self.temp,'red', label = 'Indoor temperature')
+        self.ax.plot(self.dtime, self.outdoortemp,'orange', label = 'Outdoor temperature')
+        self.ax.axhline(24, linestyle='--', color='green',label = 'Indoor temperature setpoint',linewidth = 1.2)
 
         self.ax2 = self.ax.twinx()
         self.ax2.step(self.dtime, self.FCU,'royalblue',label = 'Fanspeed',linewidth = 1.2)
@@ -100,6 +100,5 @@ if __name__ == "__main__":
         room = Room(name = node,ax = ax)
         room.display()
         roomlist.append(room)
-    plt.tight_layout() 
     plt.rcParams['savefig.dpi'] = 300
     plt.show()

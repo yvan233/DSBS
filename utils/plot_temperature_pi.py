@@ -4,8 +4,6 @@ import csv
 import pymysql
 import numpy as np
 from matplotlib import pyplot as plt
-from matplotlib.animation import FuncAnimation
-import matplotlib.animation as animation
 import matplotlib.dates as mdates
 from dateutil.parser import parse
 
@@ -65,24 +63,22 @@ class Room:
         
     # 绘制子图
     def display(self):
-        self.ax.plot(self.dtime, self.temp,'red', label = 'Indoor Temperature')
-        self.ax.plot(self.dtime, self.outdoortemp,'green', label = 'Outdoor Temperature')
+        self.ax.plot(self.dtime, self.temp,'red', label = 'Indoor temperature')
+        self.ax.plot(self.dtime, self.outdoortemp,'orange', label = 'Outdoor temperature')
+        self.ax.axhline(24, linestyle='--', color='green',label = 'Indoor temperature setpoint',linewidth = 1.2)
 
         self.ax2 = self.ax.twinx()
-        self.ax2.step(self.dtime, self.FCU,'royalblue',label = 'Fanspeed')
+        self.ax2.step(self.dtime, self.FCU,'royalblue',label = 'Fanspeed',linewidth = 1.2)
 
-        self.ax.legend(loc='upper left',frameon=True,fontsize = "medium")
-        self.ax2.legend(loc='upper right',frameon=True,fontsize = "medium")
+        self.ax.legend(loc='upper left',frameon=True,fontsize = 9)
+        self.ax2.legend(loc='upper right',frameon=True,fontsize = 9)
         
         self.ax.set_ylim(20,31)
-        # if self.name == "room_1":
-        #     self.ax.set_ylim(20,34)
-        # 设置坐标轴的最小值
-        self.ax2.set_ylim(-0.02,4)
+        self.ax2.set_ylim(-0.02,4.5)
         self.ax2.set_yticks([0,1,2,3])
-        self.ax2.set_yticklabels(['Off','Low','Medium','High'])    
-        for label in self.ax2.get_yticklabels():
-            label.set_rotation(90)
+        self.ax2.set_yticklabels(['Off','L','M','H'])    
+        # for label in self.ax2.get_yticklabels():
+        #     label.set_rotation(90)
         self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M')) 
         self.ax.set_xlabel("Time")
         self.ax.set_ylabel("Temperature(°C)")  #,rotation='horizontal')
@@ -91,7 +87,6 @@ class Room:
 
 if __name__ == "__main__":
     localpath = os.getcwd() + "/Dapp/Base/binding.csv"
-    # 读取节点信息
     fig = plt.figure(figsize=(16, 9))
     axlist = []
     roomlist = []

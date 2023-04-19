@@ -8,7 +8,7 @@ from dateutil.parser import parse
 HOST="localhost"
 USER="root"
 PASSWORD="cfins"
-DB="mingze_simulator_occ"
+DB="mingze_simulator"
 
 def db_read(cursor, table, name, num): 
     if num == 0:
@@ -61,46 +61,57 @@ class Room:
         self.FCU = self.FCU_fan * self.FCU_onoff
         self.number = np.zeros(601)
         for rec in self.occupant_num:
-            if self.name == "room1":
-                self.number[rec[0]] = rec[3]/6
+            self.number[rec[0]] = rec[3]
+
+        self.x1 = []
+        self.x2 = []
+        self.y1 = []
+        self.y2 = []
+        for i in range(len(self.number)):
+            if self.number[i] > 0:
+                self.x1.append(self.dtime[i])
+                self.y1.append(self.temp[i])
             else:
-                self.number[rec[0]] = rec[3]/3
+                self.x2.append(self.dtime[i])
+                self.y2.append(self.temp[i])
+        
 
     # 绘制子图
     def display(self):
-        self.ax.plot(self.dtime, self.temp,'red', label = 'Temperature')
+        self.ax.scatter(self.x2, self.y2,marker='^', color = 'y', s = 25, label='Temperature without occupants')
+        self.ax.scatter(self.x1, self.y1,marker='o', color = 'purple', s = 25, label='Temperature with occupants')
         # self.ax.plot(self.dtime, self.outdoortemp,'orange', label = 'Outdoor Temperature')
-        self.ax.axhline(24, xmin=0, xmax=601, linestyle='--', color='green',label = 'Temperature Setpoint')
-
+        self.ax.axhline(24, xmin=0, xmax=601, linestyle='--', color='green',label = 'Temperature setpoint')
+        # self.ax.fill_betweenx([23, 25], self.dtime[0], self.dtime[-1], color = 'c', edgecolor = 'None', alpha=0.3,label = 'Comfort zone')
         self.ax2 = self.ax.twinx()
-        self.ax2.step(self.dtime, self.FCU,'royalblue',label = 'Fanspeed',linewidth = 1.2)
-        self.ax2.fill_between(self.dtime, self.number,color = 'grey',edgecolor = 'None',label = 'Occupancy',alpha = 0.5)
+        # self.ax2.step(self.dtime, self.FCU,'royalblue',label = 'Fanspeed',linewidth = 1.2)
+        self.ax2.fill_between(self.dtime, self.number,color = 'grey',edgecolor = 'None',label = 'Occupancy',alpha = 0.8)
+
 
         self.ax.legend(loc='upper left',frameon=True,fontsize = 9)
         self.ax2.legend(loc='upper right',frameon=True,fontsize = 9)
         
-        # self.ax.set_xlim(self.dtime[0],self.dtime[-1])
-        self.ax.set_ylim(20,31)
-        self.ax2.set_ylim(-0.02,4.5)
-        self.ax2.set_yticks([0,1,2,3])
-        self.ax2.set_yticklabels(['Off','L','M','H'])    
-        for label in self.ax2.get_yticklabels():
-            label.set_rotation(90)
+        self.ax.set_xlim(self.dtime[0],self.dtime[-1])
+        self.ax.set_ylim(21,27)
+        self.ax2.set_ylim(0,15)
+        self.ax2.set_yticks([0,3,6,9,12])
+        # self.ax2.set_yticklabels(['Off','L','M','H'])    
         self.ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M')) 
         self.ax.set_xlabel("Time")
         self.ax.set_ylabel("Temperature(°C)")  #,rotation='horizontal')
-        self.ax2.set_ylabel("Fanspeed Level")
+        self.ax2.set_ylabel("Number")
         self.ax.set_title(self.title)
         
 if __name__ == "__main__":
-    fig = plt.figure(figsize=(16, 9))
+    fig = plt.figure(figsize=(9, 5))
     axlist = []
     roomlist = []
 
-    nodelist = ["room1","room2","room3","room4","room5","room6"]
+    # nodelist = ["room1","room2","room3","room4","room5","room6"]
+    nodelist = ["room4"]
 
     for i,node in enumerate(nodelist):
-        ax = fig.add_subplot(3, 2, i+1)
+        ax = fig.add_subplot(1, 1, i+1)
         room = Room(name = node,ax = ax)
         room.display()
         roomlist.append(room)
