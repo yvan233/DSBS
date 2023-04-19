@@ -1,8 +1,9 @@
 from basic_function import *
-import time as T
 import pymysql
 from room_control import cal_fcu_fan, write_room_control
 from pump_control import con_pump, write_controlpump
+import os
+import csv
 
 HOST="localhost"
 USER="root"
@@ -12,16 +13,24 @@ DB="mingze_simulator"
 USER_LIST = ["root"]
 PASSWORD_LIST = ["cfins"]
 DB_LIST = ["room", "pump", "heatpump"]
-HOST_LIST = ["192.168.3.3", "192.168.3.4", "192.168.3.6", "192.168.3.7", "192.168.3.8",
-             "192.168.3.9", "192.168.3.10", "192.168.3.11", "192.168.3.26"]
 
 Nano_List = [True, False, False, False, False, False, False]
 History_List = [True, True, True, True, True, True, True]
 
-
 for r in range(0, 7):
     room_list[r].nano_flag = Nano_List[r]
     room_list[r].history_flag = History_List[r]
+
+# get IP of all devices
+path = os.getcwd()
+path = os.path.dirname(path)
+path += "/Dapp/Base/binding.csv"
+with open(path,'r')as f:
+        data = csv.reader(f)
+        binding = []
+        for i in data:
+            binding.append(i)
+HOST_LIST = [ele[1] for ele in binding if ele[2] == "pi"]
 
 # Initialization
 # Time
