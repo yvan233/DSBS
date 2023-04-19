@@ -1,11 +1,10 @@
-# 启动系统并运行分布式算法
-import time 
+# Run the RoomControl and PumpControl tasks
 import sys
-sys.path.insert(1,".") # 把上一级目录加入搜索路径
+sys.path.insert(1,".") 
 from DASP.control import ControlMixin
 
-startNode = "room_1" # 起始节点ID
-controlMixin = ControlMixin("PI") # 控制函数集合
+startNode = "room_1" 
+controlMixin = ControlMixin("PI")
 
 DappName = "RoomControl"
 print("start task: "+DappName)

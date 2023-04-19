@@ -1,5 +1,4 @@
-# 对局域网内的树莓派批量执行cmd命令
-
+# Excute command on raspberry pi in LAN
 import paramiko
 import os
 import csv
@@ -13,7 +12,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     localpath = os.getcwd() + "/Dapp/Base/binding.csv"
-    # 读取节点信息
     with open(localpath,'r')as f:
         data = csv.reader(f)
         binding = []
@@ -24,20 +22,18 @@ if __name__ == '__main__':
         if ele[2] == "pi":
             if ele[1] != "offline":
                 try:
-                    hostname = ele[1]   #linux主机IP地址
-                    port = 22   #端口
-                    username = 'pi'   #用户名
-                    password = 'raspberry'    #密码
+                    hostname = ele[1]   #linux ip
+                    port = 22   
+                    username = 'pi'  
+                    password = 'raspberry'   
                     t=paramiko.Transport((hostname,port))
                     t.connect(username=username,password=password)
                     ssh = paramiko.SSHClient()
                     ssh._transport = t
-                    # 打开一个Channel并执行命令
+                    # open a session and execute command
                     cmd = args.cmd
                     stdin, stdout, stderr = ssh.exec_command(cmd,timeout=2)
-                    # 打印执行结果
                     print(stdout.read().decode('utf-8'))
-                    # 关闭SSHClient
                     t.close()
                     print( ele[0] + ' executes successfully!')  
                 except Exception as e:

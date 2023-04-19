@@ -5,7 +5,7 @@ import paramiko
 import traceback
 
 '''
-将制定文件夹内的所有文件同步给树莓派
+Synchroize all files in the folder to raspberry pi
 '''
 class SSH(object):
 
@@ -26,10 +26,9 @@ class SSH(object):
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         self.ssh.connect(hostname=self.ip, port=22, username=self.username, password=self.password)
 
-        self.t.connect(username=self.username, password=self.password)  # sptf 远程传输的连接
+        self.t.connect(username=self.username, password=self.password)  # sptf 
 
     def _key_connect(self):
-        # 建立连接
         self.pkey = paramiko.RSAKey.from_private_key_file('/home/roo/.ssh/id_rsa', )
         # self.ssh.load_system_host_keys()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
@@ -62,19 +61,19 @@ class SSH(object):
 
         return result.decode()
 
-    # 从远程服务器获取文件到本地
+    # get file from remote server to local
     def _sftp_get(self, remotefile, localfile):
 
         sftp = paramiko.SFTPClient.from_transport(self.t)
         sftp.get(remotefile, localfile)
 
-    # 从本地上传文件到远程服务器
+    # put file from local to remote server
     def _sftp_put(self, localfile, remotefile):
 
         sftp = paramiko.SFTPClient.from_transport(self.t)
         sftp.put(localfile, remotefile)
 
-    # 递归遍历远程服务器指定目录下的所有文件
+    # recursion traverse all files in remote server
     def _get_all_files_in_remote_dir(self, sftp, remote_dir):
         all_files = list()
         if remote_dir[-1] == '/':
@@ -84,7 +83,7 @@ class SSH(object):
         for file in files:
             filename = remote_dir + '/' + file.filename
 
-            if stat.S_ISDIR(file.st_mode):  # 如果是文件夹的话递归处理
+            if stat.S_ISDIR(file.st_mode): 
                 all_files.extend(self._get_all_files_in_remote_dir(sftp, filename))
             else:
                 all_files.append(filename)
@@ -102,7 +101,6 @@ class SSH(object):
 
                 local_filename = file.replace(remote_dir, local_dir)
                 local_filepath = os.path.dirname(local_filename)
-                # 异常符号处理
                 local_filename = local_filename.replace(':', '_')
                 if not os.path.exists(local_filepath):
                     os.makedirs(local_filepath)
@@ -112,7 +110,7 @@ class SSH(object):
             print('ssh get dir from master failed.')
             print(traceback.format_exc())
 
-    # 递归遍历本地服务器指定目录下的所有文件
+    # Recursion traverse all files in local server
     def _get_all_files_in_local_dir(self, local_dir):
         all_files = list()
 
@@ -141,7 +139,7 @@ class SSH(object):
                     sftp.stat(remote_path)
                 except:
                     # os.popen('mkdir -p %s' % remote_path)
-                    self.execute_cmd('mkdir -p %s' % remote_path) # 使用这个远程执行命令
+                    self.execute_cmd('mkdir -p %s' % remote_path) 
                 print('start downloading file：' + file)
                 sftp.put(file, remote_filename)
 
@@ -151,7 +149,6 @@ class SSH(object):
 
 if __name__ == "__main__":
     localpath = os.getcwd() + "/Dapp/Base/binding.csv"
-    # 读取节点信息
     with open(localpath,'r')as f:
         data = csv.reader(f)
         binding = []
@@ -161,21 +158,20 @@ if __name__ == "__main__":
         if ele[2] == "pi":
             if ele[1] != "offline":
                 try:
-                    # 服务器连接信息
                     host_name = ele[1]
                     user_name = 'pi'
                     password = 'raspberry'
                     port = 22
                     print( ele[0] + 'start!') 
-                    ssh = SSH(ip=host_name, username=user_name, password=password)  # 创建一个ssh类对象
-                    ssh.connect()  # 连接远程服务器    
+                    ssh = SSH(ip=host_name, username=user_name, password=password) 
+                    ssh.connect()
     
-                    # ## 下载文件夹
+                    # ## download file
                     # remote_dir = '/home/pi/xingtian/device1.0-master/DB_Backup'
                     # local_dir = 'DB_Backup/' + ele[0]
                     # ssh.sftp_get_dir(remote_dir, local_dir)  
 
-                    ## 同步文件夹
+                    ## upload file
                     remote_dir = '/home/pi/honeycomb/DASP'
                     local_dir = './DASP'
                     ssh.sftp_put_dir(local_dir, remote_dir)  

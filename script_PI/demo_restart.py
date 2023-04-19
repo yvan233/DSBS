@@ -1,3 +1,4 @@
+# Restart the task after a reboot of the PI.
 import argparse
 import sys
 sys.path.insert(1,".")

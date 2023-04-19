@@ -1,4 +1,4 @@
-import time 
+# Start the TimeSynch task on the PI
 import sys
 sys.path.insert(1,".") 
 from DASP.control import ControlMixin

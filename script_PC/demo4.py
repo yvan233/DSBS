@@ -1,4 +1,4 @@
-# 测试节点一个个启动，逐步接入网络
+# Test the node starts one by one, step by step into the network
 import time 
 import sys
 sys.path.insert(1,".")
@@ -9,7 +9,6 @@ from DASP.control import ControlMixin
 nodelist = []
 controlMixin = ControlMixin("Pc")
 
-# 启动监控脚本
 moniter = Moniter()
 moniter.run()
 
