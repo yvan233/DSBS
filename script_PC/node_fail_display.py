@@ -34,10 +34,8 @@ time.sleep(240)
 # restart node process
 node = Node(node_num)
 nodelist[node_num] = node
-# stop the task
-controlMixin.stopTask(DappName,"pump")
 
 # restart the task
 time.sleep(2)
-controlMixin.startTask(DappName,startNode)
+controlMixin.startTask(DappName,"heatpump")
 moniter.wait()
