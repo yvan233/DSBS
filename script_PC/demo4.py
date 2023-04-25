@@ -23,7 +23,7 @@ nodelist.append(node)
 
 time.sleep(15)
 print("start room_3")
-node = Node(3)
+node = Node(2)
 nodelist.append(node)
 
 moniter.wait()

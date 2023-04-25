@@ -1,5 +1,6 @@
 from basic_function import *
 import pymysql
+import time as T
 from room_control import cal_fcu_fan, write_room_control
 from pump_control import con_pump, write_controlpump
 import os
