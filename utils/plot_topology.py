@@ -1,3 +1,5 @@
+# you need to install matplotlib, networkx and pyqt5
+# pip install matplotlib networkx pyqt5
 import sys
 import matplotlib
 import networkx as nx
