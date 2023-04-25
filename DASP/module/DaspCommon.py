@@ -3,6 +3,7 @@ import datetime
 import inspect
 import json
 import platform
+import select
 import socket
 import struct
 import threading
@@ -44,7 +45,40 @@ class TcpSocket():
         body = json.dumps(jsondata)
         header = [methods, body.__len__()]
         headPack = struct.pack(TcpSocket.headformat , *header)
-        self.sock.sendall(headPack+body.encode())
+        try:
+            self.sock.sendall(headPack+body.encode())
+        except:
+            self.do_fail()
+        else:
+            self.do_pass()
+
+    def sendall_recv(self, jsondata, methods = 1):
+        '''
+        为发送的json数据添加methods和length报头，并等待接收方的回复
+            POST: methods = 1
+            REFUSE: methods = 9
+        '''
+        self.sock.setblocking(False)  # 将socket设置为非阻塞模式
+        body = json.dumps(jsondata)
+        header = [methods, body.__len__()]
+        headPack = struct.pack(TcpSocket.headformat , *header)
+        try:
+            self.sock.sendall(headPack+body.encode())
+        except:
+            self.do_fail()
+        else:
+            ready_to_read, _, _ = select.select([self.sock], [], [], 3)
+            if ready_to_read:
+                try:
+                    data = self.sock.recv(1024)
+                    self.do_pass()
+                except:
+                    self.do_fail()
+                else:
+                    if not data: # 连接断开
+                        self.do_fail()
+            else: # 超时
+                self.do_fail()
 
     @staticmethod
     def recv(conn):

@@ -2,6 +2,7 @@ import csv
 import json
 import os
 import platform
+import select
 import socket
 import struct
 import threading
@@ -41,45 +42,52 @@ class BaseServer(DaspCommon):
         """
         长连接循环接收数据框架
         """
+        server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server.bind((host, port))
+        server.listen(1) #接收的连接数
         while True:
-            server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            server.bind((host, port))
-            server.listen(1) #接收的连接数
             conn, addr = server.accept()
             print('Connected by {}:{}'.format(addr[0], addr[1]))
+            conn.setblocking(False)
             # FIFO消息队列
             dataBuffer = bytes()
             with conn:
                 while True:
-                    try:
-                        data = conn.recv(1024)
-                    except Exception as e:
-                        # 发送端进程被杀掉
-                        self.handleRecvDisconnection(addr, nbrID)
+                    ready_to_read, _, _ = select.select([conn], [], [], Const.SYSTEM_TASK_TIME + Const.RECONNECT_TIME_INTERVAL)
+                    if ready_to_read:
+                        try:
+                            data = conn.recv(1024)
+                        except Exception as e:
+                            # 发送端进程被杀掉
+                            self.handleRecvDisconnection(addr, nbrID)
+                            break
+                        if data == b"":
+                            # 发送端close()
+                            self.handleRecvDisconnection(addr, nbrID)
+                            break
+                        if data:
+                            # 把数据存入缓冲区，类似于push数据
+                            dataBuffer += data
+                            while True:
+                                if len(dataBuffer) < self.headerSize:
+                                    break  #数据包小于消息头部长度，跳出小循环
+                                # 读取包头
+                                headPack = struct.unpack(self.headformat, dataBuffer[:self.headerSize])
+                                bodySize = headPack[1]
+                                if len(dataBuffer) < self.headerSize+bodySize :
+                                    break  #数据包不完整，跳出小循环
+                                # 读取消息正文的内容
+                                body = dataBuffer[self.headerSize:self.headerSize+bodySize]
+                                body = body.decode()
+                                body = json.loads(body)
+                                # 数据处理
+                                self.handleMessage(headPack, body, conn)
+                                # 数据出列
+                                dataBuffer = dataBuffer[self.headerSize+bodySize:] # 获取下一个数据包，类似于把数据pop出
+                    else: #超时
+                        print("socket timeout")
+                        conn.close()
                         break
-                    if data == b"":
-                        # 发送端close()
-                        self.handleRecvDisconnection(addr, nbrID)
-                        break
-                    if data:
-                        # 把数据存入缓冲区，类似于push数据
-                        dataBuffer += data
-                        while True:
-                            if len(dataBuffer) < self.headerSize:
-                                break  #数据包小于消息头部长度，跳出小循环
-                            # 读取包头
-                            headPack = struct.unpack(self.headformat, dataBuffer[:self.headerSize])
-                            bodySize = headPack[1]
-                            if len(dataBuffer) < self.headerSize+bodySize :
-                                break  #数据包不完整，跳出小循环
-                            # 读取消息正文的内容
-                            body = dataBuffer[self.headerSize:self.headerSize+bodySize]
-                            body = body.decode()
-                            body = json.loads(body)
-                            # 数据处理
-                            self.handleMessage(headPack, body, conn)
-                            # 数据出列
-                            dataBuffer = dataBuffer[self.headerSize+bodySize:] # 获取下一个数据包，类似于把数据pop出
 
     def handleMessage(self, headPack, body, conn):
         """
@@ -107,8 +115,8 @@ class BaseServer(DaspCommon):
             "port": port,
             "requestdirection": direction
         }
-        self.send(nbrID, data)
-        
+        self.send_recv(nbrID, data)
+
     def send(self,id,data):
         """
         通过TCP的形式将信息发送至指定ID的节点
@@ -127,12 +135,27 @@ class BaseServer(DaspCommon):
                 self.deleteTaskNbrID(id)
                 return 0
 
-        try:
-            DaspCommon.nbrSocket[id].sendall(data)
-        except:
-            DaspCommon.nbrSocket[id].do_fail()
-        else:
-            DaspCommon.nbrSocket[id].do_pass()
+        DaspCommon.nbrSocket[id].sendall(data)
+
+    def send_recv(self,id,data):
+        """
+        通过TCP的形式将信息发送至指定ID的节点,并等待返回结果
+        """
+        if id not in DaspCommon.nbrSocket: 
+            try:
+                for ele in DaspCommon.RouteTable:
+                    if ele[4] == id:
+                        ip = ele[2]
+                        port = ele[3]
+                        break
+                print (f"connecting to {ip}:{port}")
+                remote_ip = socket.gethostbyname(ip)
+                DaspCommon.nbrSocket[id] = TcpSocket(id,remote_ip,port,self)
+            except:
+                self.deleteTaskNbrID(id)
+                return 0
+
+        DaspCommon.nbrSocket[id].sendall_recv(data)
 
     def forward2childID(self, jdata, DappName):
         """
@@ -282,6 +305,7 @@ class TaskServer(BaseServer):
         if platform.system() == "Linux":
             time.sleep(5)  # wait for other nodes to start
         while(True):
+            last_time = time.time()
             for ele in reversed(DaspCommon.RouteTable):
                 if ele:
                     self.pingID(ele[0], ele[1], ele[4], DaspCommon.nbrDirectionOtherSide[ele[4]])
@@ -293,7 +317,8 @@ class TaskServer(BaseServer):
             
             DaspCommon.systemFlag = True
             self.sendRunDatatoGUI("The current neighbors are {}".format(str(DaspCommon.nbrID)))
-            time.sleep(Const.SYSTEM_TASK_TIME)
+            if time.time() - last_time < Const.SYSTEM_TASK_TIME:
+                time.sleep(Const.SYSTEM_TASK_TIME - time.time() + last_time)
      
     def autostarttask(self):
         """
@@ -347,7 +372,7 @@ class CommServer(BaseServer):
             if headPack[0] == 1:
                 #建立通信树
                 if jdata["key"] == "ping":
-                    self.respondPing(jdata)
+                    self.respondPing(jdata, conn)
 
                 elif jdata["key"] == "shutdowntask":
                     self.respondShutDownTask(jdata)
@@ -395,11 +420,12 @@ class CommServer(BaseServer):
             print(traceback.format_exc())
             self.sendRunDatatoGUI(traceback.format_exc())
 
-    def respondPing(self, jdata):
+    def respondPing(self, jdata, conn):
         """
         回应ping信号，如果发送的节点之前不在邻居节点中 且 申请方向未被占用，则加入网络
         """
         ID = jdata["id"]
+        conn.sendall(b'pong')
         if ID not in DaspCommon.nbrID:
             direction = jdata["requestdirection"]
             if direction not in DaspCommon.nbrDirection:
